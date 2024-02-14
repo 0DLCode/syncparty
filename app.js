@@ -11,17 +11,27 @@ let globalRooms = {};
 let globalUsers = {};
 let globalFiles = [];
 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Simplified logging middleware (debugging)
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} [${req.ip}] => ${req.method} ${req.url}`);
+  next();
+});
+
 
 
 app.get('/get/rooms', (req, res) => {
-  res.send(globalRooms);
+  res.status(200).json(globalRooms);
 })
 app.get('/get/users', (req, res) => {
-  res.send(globalUsers);
+  res.status(200).json(globalUsers);
 })
 app.get('/get/files', (req, res) => {
-  res.send(globalFiles);
+  res.status(200).json(globalFiles);
 })
 
 app.get('/room', (req, res) => {
@@ -35,9 +45,9 @@ app.get('/room/timecode', (req, res) => {
   let timestamp = formData.timestamp;
   let latence = new Date().getTime() - timestamp;
   if (globalRooms.hasOwnProperty(roomUuid)) {
-    res.send(globalRooms[roomUuid].timecode);
+    resres.status(200).json(globalRooms[roomUuid].timecode);
   } else {
-    res.send('Room not found');
+    res.status(404).send('Room not found');
   }
 })
 
@@ -52,12 +62,12 @@ app.post('/update/room', (req, res) => {
   if (globalUsers.hasOwnProperty(user.uuid)) {
     if (globalUsers[user.uuid].roomHosted === roomUuid) {
     globalRooms[roomUuid].timecode = timecode + latence;
-    res.send('ok');
+    res.status(201).send('ok');
     } else {
-      res.send('Wrong host');
+      res.status(401).send('Wrong host');
     } 
   } else {
-    res.send('User not found');
+    res.status(404).send('User not found');
   }
 })
 
@@ -69,7 +79,7 @@ app.post('/create/user', (req, res) => {
   let username = formData.username;
   let userUuid = uuidv4();
   globalUsers[userUuid] = { uuid: userUuid, username: username, roomHosted: undefined };
-  res.send(globalUsers[userUuid]);
+  res.status(201).json(globalUsers[userUuid]);
 })
 
 // Create room
@@ -85,29 +95,17 @@ app.post('/create/room', (req, res) => {
     globalRooms[uuidv4()] = { name: name,
       host: user, users: [user], fileUrl: fileUrl, timecode: 0 };
 
-    res.send(`/room?id=${roomUuid}`);  // Quelque chose comme ça ;-;
+    res.status(201).send(`/room?id=${roomUuid}`);  // Quelque chose comme ça ;-;
   } else {
-    res.send('User not found');
+    res.status(404).send('User not found');
   }
 })
 
-
-// Log requests
-app.use((req, res, next) => {
-  console.log(`${new Date()} [${req.ip}] => ${req.method} ${req.url}`);
-  next();
-});
 // Log errors
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send(`Error occurred! ${err.stack}`);
 });
-
-// Parse application/json
-app.use(bodyParser.json());
-
-// Parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }));
 
 // Startup
 app.listen(port, () => {

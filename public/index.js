@@ -1,22 +1,41 @@
 let globalRooms = {};
 let globalFiles = [];
 let localUser = {};
+let isRequestFileFinished = false;
+let isRequestRoomFinished = false;
 
 // Create a new user
 function createUser(username) {
-  console.log(username, typeof username)
   fetch('/create/user', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ username: `${username}` })
+    body: JSON.stringify({ username: username })
   }).then((response) => {
     if (response.ok) {
       let user = response.json();
       console.log(user)
       localUser = user;
-      alert('User created successfully!')
+      console.log('User created successfully!')
     } else {
       throw new Error('Failed to create user')
+    }
+  }).catch((err) => {
+    console.error(err)
+  })
+}
+
+// Create a new user
+function createRoom(name, fileUrl) {
+  fetch('/create/room', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ name: name, user: localUser, fileUrl: fileUrl })
+  }).then((response) => {
+    if (response.ok) {
+      console.log('Room created successfully!', response)
+      document.open(response, '_self');
+    } else {
+      throw new Error('Failed to create room')
     }
   }).catch((err) => {
     console.error(err)
@@ -32,6 +51,10 @@ function getRooms() {
     })
     .catch(error => {
       console.error('Error fetching data:', error);
+    })
+    .finally(() => {
+      console.log("FINALLY");
+      isRequestRoomFinished = true;
     });
 }
 
@@ -44,6 +67,10 @@ function getFiles() {
   })
   .catch(error => {
     console.error('Error fetching data:', error);
+  })
+  .finally(() => {
+    console.log("FINALLY");
+    isRequestFileFinished=true;
   });
 }
 
@@ -65,17 +92,23 @@ function showFiles() {
   let fileList = document.getElementById('list-files');
   fileList.innerHTML = '';
   for (let file in globalFiles) {
+    file = globalFiles[file]; // get filename
+
     let fileElement = document.createElement('li');
     fileElement.id = 'file-element';
-    fileElement.innerHTML = `<h3>${file.name}</h3>` +
-    `<a href="${file.url}"></a>`;
+    fileElement.innerHTML = `<h3>${file.split("/").pop()}</h3>` +
+    `<a href="${file}"></a>`;
     fileList.appendChild(fileElement);
   }
 }
 
 function reloadData() {
+  isRequestRoomFinished = false;
+  isRequestFileFinished = false;
   getRooms();
   getFiles();
+  while (!globalFiles || !globalRooms){}
+  console.log(globalFiles);
 }
 
 function reload() {
@@ -85,13 +118,17 @@ function reload() {
   showFiles();
 }
 
-window.onload = () => {
+document.addEventListener('DOMContentLoaded', () => {
+  reload();
   reload();
 
   // LISTENERS
   document.getElementById('userForm').addEventListener('submit', function(event) {
     event.preventDefault();
-    const username = document.getElementById('username').value;
+    const username = document.getElementById('username').value.trim();
+    const roomName = document.getElementById('roomName').value.trim();
+    const filename = document.getElementById('filename').value.trim();
     createUser(username);
+    createRoom(roomName, filename);
   });
-}
+})
