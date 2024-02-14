@@ -1,0 +1,18 @@
+{
+  "name": "syncparty",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "express": "^4.18.2",
+    "moment": "^2.30.1",
+    "uuid": "^9.0.1"
+  }
+}

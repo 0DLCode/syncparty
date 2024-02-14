@@ -1,0 +1,41 @@
+//TODO: CLIENT
+// 1: Proposer tous les fichiers hébergés sur le server sur la page d'accueil
+// 2: Ajouter un button d'upload
+// 3: Ajouter un bouton de suppression
+// 4: Ajouter un boutton de création de salle
+// 5: Lister les session en cours
+// 6: Création d'un utilisateur
+
+// CREATION DE SALLE
+// Lorsque le fichier est cliqué il est lu sur une url specifique et un salle est crée
+// le client est alors consideré comme host
+// Un requete est envoyé côté server toutes les x microsecondes 
+
+// ACCES A UNE SALLE
+// Le client va être redirigé sur l'url de la salle en tant que client
+// Il va demander au serveur le time code actuel de la vidéo (la requete doit contenir le timestamp du client)
+// Le serveur va attendre un requete du client host (envoyé toutes les x microsecondes)
+// Le serveur va renvoyé ce timecode + le délai de la requete calculer en fonction du timestamp client (+ le délai du client host)
+
+
+
+//TODO: SERVER
+// 1: Lister tous les fichiers déployés sur le serveur
+// 2: Lister les sessions en cours
+// 3: répéter le processus 2 et 3 toutes les x secondes
+
+// HANDLER LISTENER => création userid
+
+// HANDLER LISTENER => création de salle
+// Génération id pour l'url de la salle
+// Le user est défini comme host de la salle
+
+// HANDLER LISTENER => reception timecode avec id de la salle et userid
+// Calcules la latence du client host et remplaces le dernier timecode
+
+// HANDLER LISTENER => requete pour l'obtention du timecode avec l'id de la salle et le timestamp client
+// Calcul de la latence avec timestamp client + addition au timecode
+
+// HANDLER LISTENER => UPLOAD FILES
+
+// HANDLER LISTENER => DELETE FILES

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>PLEX DE CHEZ WISH</title>
+</head>
+<body>
+    <h1>PLEX DE CHEZ WISH</h1>
+    <form id="userForm">
+        <div>
+          <label for="username">Nom d'utilisateur:</label>
+          <input type="text" id="username" name="username">
+        </div>
+        <button type="submit">Créer utilisateur</button>
+    </form>
+    <button id="reload" onclick="reload()">Refresh</button>
+    <ul id="list-rooms">
+        <li id="room-element">
+            <h3>Salle N</h3>
+            <a href="room.html">Title</a>
+        </li>
+        <li id="room-element">
+            <h3>Salle N</h3>
+            <a href="room.html">Title</a>
+        </li>
+    </ul>
+
+    <ul id="list-files">
+        <li id="file-element">
+            <h3>Fichier </h3>
+            <a href="index.json">Filename</a>
+        </li>
+    </ul>
+    <script src="index.js"></script>
+</body>
+</html>
