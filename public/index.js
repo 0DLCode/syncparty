@@ -6,16 +6,15 @@ let isRequestRoomFinished = false;
 
 // Create a new user
 function createUser(username) {
-  fetch('/create/user', {
+  return fetch('/create/user', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ username: username })
   }).then((response) => {
     if (response.ok) {
       let user = response.json();
-      console.log(user)
-      localUser = user;
       console.log('User created successfully!')
+      return user
     } else {
       throw new Error('Failed to create user')
     }
@@ -30,9 +29,10 @@ function createRoom(name, fileUrl) {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({ name: name, user: localUser, fileUrl: fileUrl })
-  }).then((response) => {
-    if (response.ok) {
-      console.log('Room created successfully!', response)
+  }).then(response => response.json())
+  .then((data) => {
+    if (data) {
+      console.log('Room created successfully!', data);
       document.open(response, '_self');
     } else {
       throw new Error('Failed to create room')
@@ -44,33 +44,25 @@ function createRoom(name, fileUrl) {
 
 // Get the list of rooms
 function getRooms() {
-    fetch(`/get/rooms`)
+    return fetch(`/get/rooms`)
     .then(response => response.json())
     .then(data => {
-      globalRooms = data;
+      return data
     })
     .catch(error => {
       console.error('Error fetching data:', error);
-    })
-    .finally(() => {
-      console.log("FINALLY");
-      isRequestRoomFinished = true;
     });
 }
 
 // Get the list of files
 function getFiles() {
-  fetch(`/get/files`)
+  return fetch(`/get/files`)
   .then(response => response.json())
   .then(data => {
-    globalFiles = data;
+    return data
   })
   .catch(error => {
     console.error('Error fetching data:', error);
-  })
-  .finally(() => {
-    console.log("FINALLY");
-    isRequestFileFinished=true;
   });
 }
 
@@ -82,7 +74,7 @@ function showRooms() {
     let roomElement = document.createElement('li');
     roomElement.id = 'room-element';
     roomElement.innerHTML = `<h3>${room.name}</h3>` +
-    `<a href="/room?id=${room.fileUrl.split("/").pop()}">${room.fileUrl.split("/").pop()}</a>`;
+    `<a href="/room?id=${room.id}">${room.fileUrl.split("/").pop()}</a>`;
     roomList.appendChild(roomElement);
   }
 }
@@ -102,24 +94,24 @@ function showFiles() {
   }
 }
 
-function reloadData() {
-  isRequestRoomFinished = false;
-  isRequestFileFinished = false;
-  getRooms();
-  getFiles();
-  while (!globalFiles || !globalRooms){}
-  console.log(globalFiles);
-}
-
 function reload() {
-  console.log('Reloading...');
-  reloadData();
-  showRooms();
-  showFiles();
+  console.log("Reloading...")
+  Promise.all([getFiles(), getRooms()])
+    .then(([files, rooms]) => {
+      globalFiles = files;
+      globalRooms = rooms;
+      showRooms();
+      showFiles();
+    })
+    .catch(error => {
+      console.error('Error occurred', error);
+    })
+    .finally(() => {
+      console.log("Reloaded", globalFiles, globalRooms)
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  reload();
   reload();
 
   // LISTENERS
@@ -128,7 +120,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const username = document.getElementById('username').value.trim();
     const roomName = document.getElementById('roomName').value.trim();
     const filename = document.getElementById('filename').value.trim();
-    createUser(username);
-    createRoom(roomName, filename);
+    Promise.resolve(createUser(username)).then((newUser) => {
+      localUser = newUser;
+      console.log("Check user", localUser);
+      createRoom(roomName, filename);
+      console.log("Check room", localRoom);
+    })
+    
   });
 })
