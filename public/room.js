@@ -80,7 +80,7 @@ function updateRoom() {
   })
 }
 
-function fetchRoomTimecode() {
+async function fetchRoomTimecode() {
   return fetch(`/room/timecode`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -94,6 +94,21 @@ function fetchRoomTimecode() {
   }).catch((err) => {
     console.error(err)
   })
+}
+
+function nextRoomTimecode(lastTimedcode) {
+  let verif = 0;
+  while (true) {
+    Promise.resolve(fetchRoomTimecode()).then((timecode) => {
+      if (timecode !== lastTimedcode) {
+        verif ++
+        if (verif == 2) {
+          return timecode
+        }
+      }
+    setTimeout(() => {}, 10)
+    })
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -141,6 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
       userLatence.value = latence * 1000
 
       let MANUAL_PLAY = false;
+      let timecode = 0;
       
       // Check if host is paused
       setInterval(() => {
@@ -171,19 +187,18 @@ document.addEventListener('DOMContentLoaded', () => {
           videoSource.pause(); // Pause client during verification
 
           // Check timecode
-          Promise.resolve(fetchRoomTimecode()).then((timecode) => {
-            if (!hostPaused) {
-              if (timecode !== undefined) {
-                console.log("timecode", timecode)
-                videoSource.currentTime = timecode + latence
-                videoSource.play();
-              } else {
-                console.log("timecode undefined !")
-              }
+          timecode = nextRoomTimecode(timecode)
+          if (!hostPaused) {
+            if (timecode !== undefined) {
+              console.log("timecode", timecode)
+              videoSource.currentTime = timecode + latence
+              videoSource.play();
             } else {
-              console.log("host paused !")
+              console.log("timecode undefined !")
             }
-          })
+          } else {
+            console.log("host paused !")
+          }
         } else {
           MANUAL_PLAY = false
         }
