@@ -1,8 +1,6 @@
 let globalRooms = {};
 let globalFiles = [];
 let localUser = {};
-let isRequestFileFinished = false;
-let isRequestRoomFinished = false;
 
 // Create a new user
 function createUser(username) {
@@ -33,7 +31,7 @@ function createRoom(name, fileUrl) {
   .then((data) => {
     if (data) {
       console.log('Room created successfully!', data);
-      document.open(response, '_self');
+      window.location = encodeURI(`/room?id=${data.roomId}&userId=${localUser.uuid}`)
     } else {
       throw new Error('Failed to create room')
     }
@@ -71,10 +69,11 @@ function showRooms() {
   let roomList = document.getElementById('list-rooms');
   roomList.innerHTML = '';
   for (let room in globalRooms) {
+    room = globalRooms[room]; // get room
     let roomElement = document.createElement('li');
     roomElement.id = 'room-element';
     roomElement.innerHTML = `<h3>${room.name}</h3>` +
-    `<a href="/room?id=${room.id}">${room.fileUrl.split("/").pop()}</a>`;
+    `<a href="/room?id=${room.id}&userId=${localUser.uuid}">${room.fileUrl.split("/").pop()}</a>`;
     roomList.appendChild(roomElement);
   }
 }
@@ -84,7 +83,7 @@ function showFiles() {
   let fileList = document.getElementById('list-files');
   fileList.innerHTML = '';
   for (let file in globalFiles) {
-    file = globalFiles[file]; // get filename
+    file = globalFiles[file]; // get file
 
     let fileElement = document.createElement('li');
     fileElement.id = 'file-element';
@@ -118,14 +117,18 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('userForm').addEventListener('submit', function(event) {
     event.preventDefault();
     const username = document.getElementById('username').value.trim();
-    const roomName = document.getElementById('roomName').value.trim();
-    const filename = document.getElementById('filename').value.trim();
     Promise.resolve(createUser(username)).then((newUser) => {
       localUser = newUser;
       console.log("Check user", localUser);
-      createRoom(roomName, filename);
-      console.log("Check room", localRoom);
+      reload();
     })
+  
+  document.getElementById('roomForm').addEventListener('submit', function(event) {
+    event.preventDefault();
+    const name = document.getElementById('roomName').value.trim();
+    const fileUrl = document.getElementById('filename').value.trim();
+    createRoom(name, fileUrl);
+  }) 
     
   });
 })

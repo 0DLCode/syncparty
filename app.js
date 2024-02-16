@@ -9,70 +9,8 @@ const port = 2305;
 
 let globalRooms = {};
 let globalUsers = {};
-let globalFiles = require('./index.json') || []; setInterval(() => { globalFiles = require('./index.json') || [];}, 10000);
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-
-app.use(express.static(path.join(__dirname, 'public')));
-
-// Simplified logging middleware (debugging)
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} [${req.ip}] => ${req.method} ${req.url}`);
-  next();
-});
-
-// DEBUG ===============================================
-app.get('/check', (req, res) => {
-  res.status(200).json({globalRooms, globalUsers, globalFiles}, 4);
-})
-app.get('/get/rooms', (req, res) => {
-  res.status(200).json(globalRooms);
-})
-app.get('/get/room', checkParams(['roomId']),(req, res) => {
-  const formData = req.body;
-  let roomId = formData.roomId;
-  if (globalRooms.hasOwnProperty(roomId)) {
-    res.status(200).json(globalRooms[roomId]);
-  } else {
-    res.status(404).send('Room not found');
-  }
-})
-app.get('/get/users', (req, res) => {
-  res.status(200).json(globalUsers);
-})
-app.get('/get/user', checkParams(['useId']),(req, res) => {
-  const formData = req.body;
-  let userId = formData.userId;
-  if (globalUsers.hasOwnProperty(userId)) {
-    res.status(200).json(globalUsers[userId]);
-  } else {
-    res.status(404).send('User not found');
-  }
-})
-app.get('/get/files', (req, res) => {
-  res.status(200).json(globalFiles);
-})
-
-
-
-
-app.get('/room', (req, res) => {
-  res.sendFile(__dirname + '/public/room.html');
-})
-
-// Get room timecode
-app.get('/room/timecode', (req, res) => {
-  const formData = req.body;
-  const roomId = formData.roomId;
-  let timestamp = formData.timestamp;
-  let latence = new Date().getTime() - timestamp;
-  if (globalRooms.hasOwnProperty(roomId)) {
-    resres.status(200).json(globalRooms[roomId].timecode + latence);
-  } else {
-    res.status(404).send('Room not found');
-  }
-})
+let globalFiles = require('./index.json') || [];
+setInterval(() => { globalFiles = require('./index.json') || [];}, 10000);
 
 // Check if all required params are present
 function checkParams(requiredParams) {
@@ -94,20 +32,104 @@ function checkParams(requiredParams) {
   };
 }
 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/files', express.static(path.join(__dirname, 'files')));
+
+// Simplified logging middleware (debugging)
+app.use((req, res, next) => {
+  if (req.url !== "/update/room") {
+    console.log(`${new Date().toISOString()} [${req.ip}] => ${req.method} ${req.url}`);
+  }
+  next();
+});
+
+
+// DEBUG ===============================================
+app.get('/check', (req, res) => {
+  res.status(200).json({globalRooms, globalUsers, globalFiles}, 4);
+})
+app.get('/get/rooms', (req, res) => {
+  res.status(200).json(globalRooms);
+})
+app.post('/get/room', checkParams(['roomId']),(req, res) => {
+  const formData = req.body;
+  let roomId = formData.roomId;
+  console.log(roomId)
+  if (globalRooms.hasOwnProperty(roomId)) {
+    res.status(200).json(globalRooms[roomId]);
+  } else {
+    res.status(404).send('Room not found');
+  }
+})
+app.get('/get/users', (req, res) => {
+  res.status(200).json(globalUsers);
+})
+app.post('/get/user', checkParams(['userId']),(req, res) => {
+  const formData = req.body;
+  let userId = formData.userId;
+  if (globalUsers.hasOwnProperty(userId)) {
+    res.status(200).json(globalUsers[userId]);
+  } else {
+    res.status(404).send('User not found');
+  }
+})
+app.get('/get/files', (req, res) => {
+  res.status(200).json(globalFiles);
+})
+app.get('/files')
+
+
+
+app.get('/room', (req, res) => {
+  res.sendFile(__dirname + '/public/room.html');
+})
+
+// Get room timecode
+app.post('/room/timecode', checkParams(['roomId', 'timestamp']), (req, res) => {
+  const formData = req.body;
+  const roomId = formData.roomId;
+  let timestamp = formData.timestamp;
+  let latence;
+  if (formData.noLatence) {
+    latence = 0;
+  } else {
+    latence = (new Date().getTime() - timestamp) / 1000;
+  }
+  if (globalRooms.hasOwnProperty(roomId)) {
+    let timecode = globalRooms[roomId].timecode + latence;
+    res.status(200).json(timecode);
+    console.log(`get timecode: ${timecode} + ${latence*1000}ms`);
+  } else {
+    res.status(404).send('Room not found');
+  }
+})
+
 // Update room timecode by host
-app.post('/update/room', checkParams(['user', 'roomId', 'timecode', 'timestamp']),(req, res) => {
+app.post('/update/room', checkParams(['user', 'roomId', 'timecode', 'timestamp', 'pause']),(req, res) => {
   const formData = req.body;
   const user = formData.user;
   const roomId = formData.roomId;
+  const pause = formData.pause;
   let timecode = formData.timecode;
   let timestamp = formData.timestamp;
 
-  let latence = new Date().getTime() - timestamp;
+  let latence = (new Date().getTime() - timestamp) / 1000;
 
   if (globalUsers.hasOwnProperty(user.uuid)) {
     if (globalUsers[user.uuid].roomHosted === roomId) {
-    globalRooms[roomId].timecode = timecode + latence;
-    res.status(201).send('ok');
+      if (pause) {
+        console.log("paused at", timecode);
+        globalRooms[roomId]['pause'] = true;
+        globalRooms[roomId].timecode = timecode; 
+      } else {
+        globalRooms[roomId].timecode = timecode + latence;
+        globalRooms[roomId].pause = false;
+        console.log(`timecode updated: ${timecode} + ${latence*1000}ms`); // DEBUG ===================
+      }
+      res.status(201).send('ok');
     } else {
       res.status(401).send('Wrong host');
       console.log("Wrong host");
@@ -145,7 +167,7 @@ app.post('/create/room', checkParams(['name', 'user', 'fileUrl']),(req, res) => 
     globalUsers[user.uuid].roomHosted = roomId;
     globalRooms[roomId] = { name: name, id: roomId,
       host: user, users: [user], fileUrl: fileUrl, timecode: 0 };
-    res.status(201).send(`/room?id=${roomId}&userId=${user.uuid}`);  // Quelque chose comme ça ;-;
+    res.status(201).json({ roomId: roomId })  // Quelque chose comme ça ;-;
     console.log("==> Room created", globalRooms[roomId]);
   } else {
     res.status(404).send('User not found');

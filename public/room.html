@@ -7,8 +7,9 @@
 </head>
 <body>
     <h1 id="room-name">Fetching room name..</h1>
-    <video>
-        <source src="" id="video-source" type="video/mp4" >
+    <label for="user-latence" id="latence-label">Latence (ms):</label>
+    <input type="range" id="user-latence" name="user-latence" min="1" max="500">
+    <video type="video/mp4" id="video-source" type="video/mp4" controls>
         Video loading...
     </video>
 

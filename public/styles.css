@@ -39,10 +39,6 @@ ul#list-files{
   padding: 0;
 } 
 
-#list-files li{ 
-
-}
-
 li#file-element {
   width: 300px;
   color: black;
@@ -54,6 +50,13 @@ li#file-element {
   margin: 5px;
 
 }
+
+div.formContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 form {
   max-width: 300px;
   margin: 0 auto;
@@ -89,5 +92,11 @@ button {
 }
 
 button:hover {
+  transition: 100ms;
   background-color: #45a049;
+}
+button:active {
+  background-color: #3e8e41;
+  box-shadow: 0 5px #666;
+  transform: translateY(4px);
 }

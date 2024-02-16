@@ -8,20 +8,27 @@
 </head>
 <body>
     <h1>PLEX DE CHEZ WISH</h1>
-    <form id="userForm">
-        <div>
-          <label for="username">Username: </label>
-          <input type="text" id="username" name="username"
-            placeholder="Enter your username" value="UserMember">
-          <label for="username">Room name: </label>
-          <input type="text" id="roomName" name="roomName"
-            placeholder="Enter your room name" value="SAO">
-          <label for="username">Filename: </label>
-          <input type="text" id="filename" name="filename"
-            placeholder="Enter your filename", value="Sword Art Online - 1x15 - Le retour au monde réel.mkv">
-        </div>
-        <button type="submit">Create</button>
-    </form>
+    <div class="formContainer">
+        <form id="userForm">
+            <div>
+            <label for="username">Username: </label>
+            <input type="text" id="username" name="username"
+                placeholder="Enter your username" value="UserMember">
+            </div>
+            <button type="submit">Create</button>
+        </form>
+        <form id="roomForm">
+            <div>
+            <label for="roomName">Room name: </label>
+            <input type="text" id="roomName" name="roomName"
+                placeholder="Enter your room name" value="My Nice WatchParty">
+            <label for="filename">Filename: </label>
+            <input type="text" id="filename" name="filename"
+                placeholder="Enter your filename", value="daft_punk.mp4">
+            </div>
+            <button type="submit">Create</button>
+        </form>
+    </div>
     <button id="reload" onclick="reload()">Refresh</button>
     <ul id="list-rooms">
         <li id="room-element">
