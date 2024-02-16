@@ -86,7 +86,7 @@ function updateRoom() {
   })
 }
 
-function fetchRoomTimecode() {
+async function fetchRoomTimecode() {
   return fetch(`/room/timecode`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -267,6 +267,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     })
   }
-  
+ 
   
 })
