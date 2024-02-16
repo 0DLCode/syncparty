@@ -28,7 +28,8 @@ ul#list-rooms {
   background-color: #8AA29E;
   margin: 5px;
 }
-ul#list-files{
+
+ul#list-files {
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -37,9 +38,7 @@ ul#list-files{
   list-style: none;
   margin: 0;
   padding: 0;
-} 
-
-li#file-element {
+} li#file-element {
   width: 300px;
   color: black;
   list-style: none;
@@ -48,13 +47,39 @@ li#file-element {
   padding: 10px;
   background-color: #70599b;
   margin: 5px;
+}
 
+ul#list-users {
+  display: block;
+} #list-users li {
+  color: rgb(255, 255, 255);
+  list-style: none;
+  font-size: 10px;
+  border-radius: 4px;
+  padding: 10px;
+  background-color: #000000;
+  margin: 5px;
+} #list-users li:hover {
+  background-color: #1d1d1d;
+} #list-users li.host {
+  color: rgb(173, 173, 25);
 }
 
 div.formContainer {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+div#userInfo {
+  width: 175px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  background-color: #92b9a4a1;
+  border-radius: 5px;
+  box-shadow: 0 7px 7px rgba(255, 255, 255, 0.5);
+  padding: 20px;
 }
 
 form {
@@ -65,13 +90,11 @@ form {
   border-radius: 5px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
-
 label {
   display: block;
   margin-bottom: 10px;
   color: #ffffff;
 }
-
 input[type="text"] {
   width: 280px;
   padding: 10px;
@@ -90,7 +113,6 @@ button {
   border-radius: 5px;
   cursor: pointer;
 }
-
 button:hover {
   transition: 100ms;
   background-color: #45a049;

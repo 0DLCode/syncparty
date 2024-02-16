@@ -1,27 +1,23 @@
+import { createUser, getRooms, getFiles, setCookie, checkUserCookie } from '/utils.js';
+
 let globalRooms = {};
 let globalFiles = [];
 let localUser = {};
 
-// Create a new user
-function createUser(username) {
-  return fetch('/create/user', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ username: username })
-  }).then((response) => {
-    if (response.ok) {
-      let user = response.json();
-      console.log('User created successfully!')
-      return user
-    } else {
-      throw new Error('Failed to create user')
-    }
-  }).catch((err) => {
-    console.error(err)
-  })
+const cookie = document.cookie;
+const formUsername = document.getElementById('username');
+const roomForm = document.getElementById('roomForm');
+const userInfo = document.getElementById('userInfo');
+
+
+
+
+function showUserInfo() {
+  userInfo.innerHTML = `<p id="username">${localUser.username}</p>` +
+  `<p id="uuid">${localUser.uuid}</p>`
 }
 
-// Create a new user
+// Create a new room
 function createRoom(name, fileUrl) {
   fetch('/create/room', {
     method: 'POST',
@@ -38,30 +34,6 @@ function createRoom(name, fileUrl) {
   }).catch((err) => {
     console.error(err)
   })
-}
-
-// Get the list of rooms
-function getRooms() {
-    return fetch(`/get/rooms`)
-    .then(response => response.json())
-    .then(data => {
-      return data
-    })
-    .catch(error => {
-      console.error('Error fetching data:', error);
-    });
-}
-
-// Get the list of files
-function getFiles() {
-  return fetch(`/get/files`)
-  .then(response => response.json())
-  .then(data => {
-    return data
-  })
-  .catch(error => {
-    console.error('Error fetching data:', error);
-  });
 }
 
 // Show the list of rooms
@@ -111,24 +83,37 @@ function reload() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  reload();
 
-  // LISTENERS
+    // LISTENERS
   document.getElementById('userForm').addEventListener('submit', function(event) {
     event.preventDefault();
-    const username = document.getElementById('username').value.trim();
-    Promise.resolve(createUser(username)).then((newUser) => {
+    Promise.resolve(createUser(formUsername.value.trim())).then((newUser) => {
       localUser = newUser;
+      showUserInfo();
+      setCookie('user', JSON.stringify(localUser), 1);
       console.log("Check user", localUser);
       reload();
     })
-  
-  document.getElementById('roomForm').addEventListener('submit', function(event) {
+
+  roomForm.addEventListener('click', function(event) {
     event.preventDefault();
+    console.log(roomForm.value);
     const name = document.getElementById('roomName').value.trim();
     const fileUrl = document.getElementById('filename').value.trim();
+    console.log("Create room", name, fileUrl);
     createRoom(name, fileUrl);
-  }) 
-    
+    })  
   });
+
+  let check = checkUserCookie();
+  if (check) {
+    check.then((checkUser) => {
+      if (checkUser) {
+        localUser = checkUser;
+        showUserInfo();
+      }
+    })
+  }
+
+  reload();
 })

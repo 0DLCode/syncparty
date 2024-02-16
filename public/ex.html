@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video.js MKV Example</title>
+  <!-- Include Video.js CSS -->
+  <link href="https://vjs.zencdn.net/7.14.3/video-js.css" rel="stylesheet">
+  <!-- Include Video.js library -->
+  <script src="https://vjs.zencdn.net/7.14.3/video.min.js"></script>
+</head>
+<body>
+  <video
+    id="my-video"
+    class="video-js"
+    controls
+    preload="auto"
+    width="640"
+    height="264"
+    data-setup="{}">
+    <source src="/files/sao1-17.mkv" type="video/mp4">
+    <!-- Fallback for browsers that don't support the video tag -->
+    <p class="vjs-no-js">
+      To view this video please enable JavaScript, and consider upgrading to a
+      web browser that
+      <a href="https://videojs.com/html5-video-support/" target="_blank">
+        supports HTML5 video
+      </a>
+    </p>
+  </video>
+
+  <!-- Include Video.js scripts -->
+  <script src="https://vjs.zencdn.net/7.14.3/video.min.js"></script>
+  <!-- Initialize Video.js -->
+  <script>
+    var player = videojs('my-video');
+  </script>
+</body>
+</html>
