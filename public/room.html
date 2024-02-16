@@ -1,18 +1,30 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="eng">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
     <title>Room </title>
 </head>
 <body>
     <h1 id="room-name">Fetching room name..</h1>
+    <form id="userForm">
+        <label for="username">Username: </label>
+        <input type="text" id="username" name="username"
+            placeholder="Enter your username" value="UserMember">
+        <button id="form-button">Create</button>
+    </form>
+    
     <label for="user-latence" id="latence-label">Latence (ms):</label>
     <input type="range" id="user-latence" name="user-latence" min="1" max="500">
-    <video type="video/mp4" id="video-source" type="video/mp4" controls>
+    <video id="video-source" type="video/mp4" controls>
         Video loading...
     </video>
 
-    <script src="room.js"></script>
+    <ul id="list-users">
+        <li>Loading users...</li>
+    </ul>
+
+    <script type="module" src="room.js"></script>
 </body>
 </html>

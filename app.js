@@ -79,8 +79,6 @@ app.post('/get/user', checkParams(['userId']),(req, res) => {
 app.get('/get/files', (req, res) => {
   res.status(200).json(globalFiles);
 })
-app.get('/files')
-
 
 
 app.get('/room', (req, res) => {
@@ -138,6 +136,16 @@ app.post('/update/room', checkParams(['user', 'roomId', 'timecode', 'timestamp',
     res.status(404).send('User not found');
     console.log("User not found");
   }
+})
+
+// Add user to room
+app.post('/join/room', checkParams(['user', 'roomId']),(req, res) => {
+  const formData = req.body;
+  const user = formData.user;
+  const roomId = formData.roomId;
+
+  globalRooms[roomId].users.push(user);
+  res.status(201).send('ok');
 })
 
 // Create user
