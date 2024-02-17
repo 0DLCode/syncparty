@@ -1,9 +1,16 @@
 const path = require('path');
+const WebSocket = require('ws');
 const moment = require('moment');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 
+const sleep = (millis) => {
+  var stop = new Date().getTime();
+  while (new Date().getTime() < stop + millis) {}
+};
+
+const wss = new WebSocket.Server({ port: 2300 });  // Create websocket server
 const app = express();
 const port = 2305;
 
@@ -11,6 +18,32 @@ let globalRooms = {};
 let globalUsers = {};
 let globalFiles = require('./index.json') || [];
 setInterval(() => { globalFiles = require('./index.json') || [];}, 10000);
+
+// Handle WebSocket
+wss.on('connection', function connection(ws) {
+  console.log(`Client connected`);
+
+  // On message received
+  ws.on('message', async function incoming(event) {
+    console.log('event received:', event.toString("utf-8"));
+    let msgBody = JSON.parse(event.toString("utf-8"));
+    console.log('Decoded message:', msgBody);
+    if (msgBody.action === 'nextTimecode') {
+      let roomId = msgBody.roomId;
+      let lastTimecode = msgBody.lastTimecode;
+      if (globalRooms.hasOwnProperty(roomId)) {
+        while (globalRooms[roomId].timecode === lastTimecode) {
+          await new Promise(resolve => setTimeout(resolve, 100)); // Attendre 100ms
+        }
+        let timecode = globalRooms[roomId].timecode;
+        ws.send(JSON.stringify({timecode: timecode}));
+      } else {
+        console.log("Room not found");
+        ws.send(JSON.stringify({error: "Room not found"}));
+      }
+    }
+  });
+});
 
 // Check if all required params are present
 function checkParams(requiredParams) {
@@ -41,7 +74,7 @@ app.use('/files', express.static(path.join(__dirname, 'files')));
 // Simplified logging middleware (debugging)
 app.use((req, res, next) => {
   if (req.url !== "/update/room") {
-    console.log(`${new Date().toISOString()} [${req.ip}] => ${req.method} ${req.url}`);
+    console.log(`${moment().format('YYYY-MM-DD HH:mm:ss')} [${req.ip}] => ${req.method} ${req.url}`);
   }
   next();
 });
@@ -144,6 +177,12 @@ app.post('/join/room', checkParams(['user', 'roomId']),(req, res) => {
   const user = formData.user;
   const roomId = formData.roomId;
 
+  for (let oldUser of globalRooms[roomId].users) {
+    if (oldUser.uuid === user.uuid) {
+      console.log("User already in room");
+      return res.status(409).send('User already in room');
+    }
+  }
   globalRooms[roomId].users.push(user);
   res.status(201).send('ok');
 })
