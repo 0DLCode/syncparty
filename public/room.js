@@ -288,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Set manual latence
         userLatence.addEventListener('input', () => {
           latence = userLatence.value / 1000
-          userLatenceLabel.innerHTML = `Latence: ${latence}ms`
+          userLatenceLabel.innerHTML = `Latence: ${latence*1000}ms`
         })
         userLatence.value = latence * 1000
   
