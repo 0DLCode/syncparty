@@ -140,6 +140,10 @@ video {
   width: 80%;
   margin: 0;
 }
+input#user-latence {
+  width: 300px;
+}
+
 @media (max-width: 875px) {
   ul#list-users {
     flex-basis: 100%; /* Revenir à la ligne s'il n'y a pas assez de place */

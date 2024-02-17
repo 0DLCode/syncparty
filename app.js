@@ -21,9 +21,11 @@ function webJsonDecode(event) {
   return msgBody;
 }
 
+let tempLog = 100;
 // Handle WebSocket
 wss.on('connection', function connection(ws) {
   console.log(`Client connected`);
+  
 
   // On message received
   ws.on('message', async function incoming(event) {
@@ -56,7 +58,7 @@ wss.on('connection', function connection(ws) {
       let timecode = msgBody.timecode;
       let timestamp = msgBody.timestamp;
     
-      let latence = (new Date().getTime() - timestamp) / 1000;
+      let latence = (new Date().getTime() - timestamp) / 1000 ;
     
       if (globalUsers.hasOwnProperty(user.uuid)) {
         if (globalUsers[user.uuid].roomHosted === roomId) {
@@ -67,7 +69,11 @@ wss.on('connection', function connection(ws) {
           } else {
             globalRooms[roomId].timecode = timecode; // + latence;
             globalRooms[roomId].pause = false;
-            console.log(`timecode updated: ${timecode} (${latence*1000}ms)`); // DEBUG ===================
+            if (tempLog == 100) {
+              console.log(`[LOG/100] timecode updated: ${timecode} (${latence*1000}ms)`); // DEBUG ===================
+              tempLog = 0;
+            }
+            tempLog++;
           }
           ws.send(JSON.stringify({ok: true}));
         } else {

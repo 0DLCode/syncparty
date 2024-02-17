@@ -15,7 +15,7 @@ let localUser;
 let localRoom;
 let roomUsers = {};
 
-let latence = 0.2;
+let latence = 0.0;
 const userLatence = document.getElementById('user-latence');
 const userLatenceLabel = document.getElementById('latence-label');
 
@@ -326,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
           let startTime = new Date().getTime();
           if (!MANUAL_PLAY) {
             MANUAL_PLAY = true
-            videoSource.pause(); // Pause client during verification
+            //videoSource.pause(); // Pause client during verification
             Promise.resolve(fetchRoomTimecode()).then((timecode) => {
               videoSource.currentTime = timecode
             })
@@ -336,8 +336,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (timecode !== undefined) {
                   console.log("timecode", timecode)
                   latence += (new Date().getTime() - startTime) / 1000
-                  videoSource.currentTime = timecode + latence
-                  videoSource.play();
+                  console.log("latence", latence)
+                  videoSource.currentTime = timecode + latence;
+                  //videoSource.play();
                 } else {
                   console.log("timecode undefined !")
                 }
