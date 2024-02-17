@@ -5,11 +5,6 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 
-const sleep = (millis) => {
-  var stop = new Date().getTime();
-  while (new Date().getTime() < stop + millis) {}
-};
-
 const wss = new WebSocket.Server({ port: 2300 });  // Create websocket server
 const app = express();
 const port = 2305;
