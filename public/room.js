@@ -154,7 +154,7 @@ function webUpdateRoom(socket) {
 
 function nextRoomTimecode() {
   return new Promise((resolve, reject) => {
-    const socket = new WebSocket(`ws://${window.location.host.toString().split(":")[0]}:2300/`);
+    const socket = new WebSocket(`ws://${window.location.hostname}:2300/`);
 
     let message = { action: "nextTimecode", timecode: videoSource.currentTime, roomId: roomId, timestamp: new Date().getTime() };
     console.log("Message:", message);
@@ -237,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (localRoom.host.uuid === localUser.uuid) {
         // HOST
-        const hostSocket = new WebSocket(`ws://${window.location.host.toString().split(":")[0]}:2300/`);
+        const hostSocket = new WebSocket(`ws://${window.location.hostname}:2300/`);
         hostSocket.onopen = function() {
           console.log('Connection HOST WebSocket active');
         }
