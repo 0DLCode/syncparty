@@ -8,12 +8,12 @@
 </head>
 <body>
     <h1>PLEX DE CHEZ WISH</h1>
-    <div id="userInfo">
-        <p>username</p>
-        <p>uuid</p>
-    </div>
     <div class="formContainer">
-        <form id="userForm">
+        <div id="userInfo">
+            <p>username</p>
+            <p>uuid</p>
+        </div>
+        <form id="userForm" onsubmit="return false">
             <div>
             <label for="username">Username: </label>
             <input type="text" id="username" name="username"
@@ -21,14 +21,14 @@
             </div>
             <button type="submit">Create</button>
         </form>
-        <form id="roomForm">
+        <form id="roomForm" onsubmit="return false">
             <div>
             <label for="roomName">Room name: </label>
             <input type="text" id="roomName" name="roomName"
-                placeholder="Enter your room name" value="My Nice WatchParty">
+                placeholder="Enter your room name" value="SAO Party">
             <label for="filename">Filename: </label>
             <input type="text" id="filename" name="filename"
-                placeholder="Enter your filename", value="daft_punk.mp4">
+                placeholder="Enter your filename", value="saoA-04.mp4">
             </div>
             <button type="submit">Create</button>
         </form>

@@ -19,6 +19,8 @@ let latence = 0.2;
 const userLatence = document.getElementById('user-latence');
 const userLatenceLabel = document.getElementById('latence-label');
 
+console.log(window.location.origin);
+
 let STOP = false;
 let hostPaused = false;
 
@@ -86,7 +88,7 @@ function updateRoom() {
   })
 }
 
-async function fetchRoomTimecode() {
+function fetchRoomTimecode() {
   return fetch(`/room/timecode`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -107,11 +109,46 @@ function showUsers(room) {
   for (let user in room.users) {
     user = room.users[user];
     if (user.uuid === room.host.uuid) {
-      listUsersElement.innerHTML += `<li class="host">[HOST] ${user.username}</li>`;
+      listUsersElement.innerHTML += `<li><strong>[HOST]</strong> ${user.username}</li>`;
+    } else if (user.uuid === userId) {
+      listUsersElement.innerHTML += `<li>${user.username}  <em>(You)</em></li>`;
     } else {
+      
       listUsersElement.innerHTML += `<li>${user.username}</li>`; 
     }
   }
+}
+
+async function nextRoomTimecode() {
+  const socket = new WebSocket(`ws://localhost:2300/`);
+  let lastTimecode = await fetchRoomTimecode(); // Attendre la résolution de la promesse fetchRoomTimecode()
+  let message = { action: "nextTimecode", lastTimecode, roomId: roomId };
+  console.log("Message:", message);
+  
+  return new Promise((resolve, reject) => {
+    socket.onopen = function() {
+      console.log('Connection WebSocket active');
+      socket.send(JSON.stringify(message));
+    };
+
+    socket.onmessage = function(event) {
+      console.log('Message received:', event.data);
+      let decodedMessage = JSON.parse(event.data);
+      console.log('Decoded message:', decodedMessage);
+      if (decodedMessage.error) {
+        console.error('WEBSOCKET Error:', decodedMessage.error);
+        reject(decodedMessage.error);
+      } else {
+        console.log('Next timecode:', decodedMessage.timecode);
+        resolve(decodedMessage.timecode);
+      }
+    };
+    
+    socket.onerror = function(error) {
+      console.error('WebSocket Error:', error);
+      reject(error);
+    };
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -228,6 +265,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 videoSource.pause();
               } else {
                 videoSource.play();
+                nextRoomTimecode().then((timecode) => {
+                  videoSource.currentTime = timecode + latence
+                  
+                })
               }
               console.log("hostPaused", hostPaused)
             }
@@ -247,7 +288,7 @@ document.addEventListener('DOMContentLoaded', () => {
             videoSource.pause(); // Pause client during verification
   
             // Check timecode
-            Promise.resolve(fetchRoomTimecode()).then((timecode) => {
+            Promise.resolve(nextRoomTimecode()).then((timecode) => {
               if (!hostPaused) {
                 if (timecode !== undefined) {
                   console.log("timecode", timecode)
@@ -267,6 +308,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     })
   }
- 
+  
   
 })
