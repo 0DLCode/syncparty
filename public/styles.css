@@ -54,24 +54,27 @@ ul#list-files {
 }
 
 ul#list-users {
-  display: block;
+  flex: 1;
+  max-width: calc(100% - 80%); /* Prendre le reste de l'espace disponible */
+  padding-inline-start: 0px;
+  margin-left: 10px;
 } #list-users li {
   width: 150px;
   color: rgb(255, 255, 255);
   list-style: none;
   font-size: 10px;
   border-radius: 4px;
-  padding: 10px;
+  padding: 5px;
   background-color: #0c0c0c;
-  margin: 5px;
+  margin: 5px 0px 5px 0px;
 } #list-users li:hover {
   background-color: #1d1d1d;
 }
 
 div.main {
   margin: 5px;
-  padding: 20px;
   display:flex;
+  flex-wrap: wrap;
 }
 div.formContainer {
   display: flex;
@@ -93,7 +96,7 @@ div#userInfo {
   margin: 7px;
 }
 
-form {
+div#roomForm, form {
   max-width: 300px;
   margin: 5px;
   background-color: #252525;
@@ -135,4 +138,15 @@ button:active {
 }
 video {
   width: 80%;
+  margin: 0;
+}
+@media (max-width: 875px) {
+  ul#list-users {
+    flex-basis: 100%; /* Revenir à la ligne s'il n'y a pas assez de place */
+  } ul#list-users li {
+    width: 300px;
+  }
+  video {
+    width: 100%; /* Ajuster la vidéo à 100% */
+  }
 }

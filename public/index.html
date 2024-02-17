@@ -13,7 +13,7 @@
             <p>username</p>
             <p>uuid</p>
         </div>
-        <form id="userForm" onsubmit="return false">
+        <form id="userForm">
             <div>
             <label for="username">Username: </label>
             <input type="text" id="username" name="username"
@@ -21,7 +21,7 @@
             </div>
             <button type="submit">Create</button>
         </form>
-        <form id="roomForm" onsubmit="return false">
+        <div id="roomForm">
             <div>
             <label for="roomName">Room name: </label>
             <input type="text" id="roomName" name="roomName"
@@ -30,8 +30,8 @@
             <input type="text" id="filename" name="filename"
                 placeholder="Enter your filename">
             </div>
-            <button type="submit">Create</button>
-        </form>
+            <button id="room-submit">Create</button>
+        </div>
     </div>
     <h2>Rooms</h2>
     <ul id="list-rooms">

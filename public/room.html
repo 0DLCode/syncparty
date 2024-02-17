@@ -17,13 +17,19 @@
     
     <label for="user-latence" id="latence-label">Latence (ms):</label>
     <input type="range" id="user-latence" name="user-latence" min="1" max="500">
-    <video id="video-source" type="video/mp4" controls>
-        Video loading...
-    </video>
+    <br>
 
-    <ul id="list-users">
-        <li>Loading users...</li>
-    </ul>
+    <div class="main">
+        
+        <video id="video-source" type="video/mp4" controls>
+            Video loading...
+        </video>
+
+        <ul id="list-users">
+            <li>Loading users...</li>
+        </ul>
+
+    </div>
 
     <script type="module" src="room.js"></script>
 </body>

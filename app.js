@@ -14,21 +14,32 @@ let globalUsers = {};
 let globalFiles = require('./index.json') || [];
 setInterval(() => { globalFiles = require('./index.json') || [];}, 10000);
 
+
+function webJsonDecode(event) {
+  let msgBody = JSON.parse(event.toString("utf-8"));
+  // console.log('Decoded message:', msgBody);
+  return msgBody;
+}
+
 // Handle WebSocket
 wss.on('connection', function connection(ws) {
   console.log(`Client connected`);
 
   // On message received
   ws.on('message', async function incoming(event) {
-    console.log('event received:', event.toString("utf-8"));
-    let msgBody = JSON.parse(event.toString("utf-8"));
-    console.log('Decoded message:', msgBody);
+    let msgBody = webJsonDecode(event);
+    if (msgBody.noLog === undefined) {
+      console.log('Decoded message:', msgBody);
+    }
+    
     if (msgBody.action === 'nextTimecode') {
+      // If client ask for next timecode
+      
       let roomId = msgBody.roomId;
       let lastTimecode = msgBody.lastTimecode;
       if (globalRooms.hasOwnProperty(roomId)) {
         while (globalRooms[roomId].timecode === lastTimecode) {
-          await new Promise(resolve => setTimeout(resolve, 100)); // Attendre 100ms
+          await new Promise(resolve => setTimeout(resolve, 100)); // wait 100ms
         }
         let timecode = globalRooms[roomId].timecode;
         ws.send(JSON.stringify({timecode: timecode}));
@@ -36,9 +47,43 @@ wss.on('connection', function connection(ws) {
         console.log("Room not found");
         ws.send(JSON.stringify({error: "Room not found"}));
       }
+    } else if (msgBody.action === 'updateRoom') {
+      // If host ask to update room
+
+      const user = msgBody.user;
+      const roomId = msgBody.roomId;
+      const pause = msgBody.pause;
+      let timecode = msgBody.timecode;
+      let timestamp = msgBody.timestamp;
+    
+      let latence = (new Date().getTime() - timestamp) / 1000;
+    
+      if (globalUsers.hasOwnProperty(user.uuid)) {
+        if (globalUsers[user.uuid].roomHosted === roomId) {
+          if (pause) {
+            console.log("paused at", timecode);
+            globalRooms[roomId]['pause'] = true;
+            globalRooms[roomId].timecode = timecode; 
+          } else {
+            globalRooms[roomId].timecode = timecode; // + latence;
+            globalRooms[roomId].pause = false;
+            console.log(`timecode updated: ${timecode} (${latence*1000}ms)`); // DEBUG ===================
+          }
+          ws.send(JSON.stringify({ok: true}));
+        } else {
+          ws.send(JSON.stringify({error: "Wrong host"}));
+          console.log("Wrong host");
+        } 
+      } else {
+        ws.send(JSON.stringify({error: "User not found"}));
+        console.log("User not found");
+      }
     }
   });
 });
+
+
+
 
 // Check if all required params are present
 function checkParams(requiredParams) {
@@ -112,6 +157,7 @@ app.get('/get/files', (req, res) => {
 app.get('/room', (req, res) => {
   res.sendFile(__dirname + '/public/room.html');
 })
+
 
 // Get room timecode
 app.post('/room/timecode', checkParams(['roomId', 'timestamp']), (req, res) => {

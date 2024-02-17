@@ -7,6 +7,7 @@ let localUser = {};
 const cookie = document.cookie;
 const formUsername = document.getElementById('username');
 const roomForm = document.getElementById('roomForm');
+const roomButton = document.getElementById('room-submit');
 const userInfo = document.getElementById('userInfo');
 
 
@@ -82,29 +83,29 @@ function reload() {
     });
 }
 
+
+// LISTENERS
+roomButton.addEventListener('click', function(event) {
+  event.preventDefault();
+  console.log(roomForm.value);
+  const name = document.getElementById('roomName').value.trim();
+  const fileUrl = document.getElementById('filename').value.trim();
+  console.log("Create room", name, fileUrl);
+  createRoom(name, fileUrl);
+});
+
+document.getElementById('userForm').addEventListener('submit', function(event) {
+  event.preventDefault();
+  Promise.resolve(createUser(formUsername.value.trim())).then((newUser) => {
+    localUser = newUser;
+    showUserInfo();
+    setCookie('user', JSON.stringify(localUser), 1);
+    console.log("Check user", localUser);
+    reload();
+  })
+});
+
 document.addEventListener('DOMContentLoaded', () => {
-
-    // LISTENERS
-  document.getElementById('userForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-    Promise.resolve(createUser(formUsername.value.trim())).then((newUser) => {
-      localUser = newUser;
-      showUserInfo();
-      setCookie('user', JSON.stringify(localUser), 1);
-      console.log("Check user", localUser);
-      reload();
-    })
-
-  roomForm.addEventListener('click', function(event) {
-    event.preventDefault();
-    console.log(roomForm.value);
-    const name = document.getElementById('roomName').value.trim();
-    const fileUrl = document.getElementById('filename').value.trim();
-    console.log("Create room", name, fileUrl);
-    createRoom(name, fileUrl);
-    })  
-  });
-
   let check = checkUserCookie();
   if (check) {
     check.then((checkUser) => {
