@@ -15,7 +15,7 @@ let localUser;
 let localRoom;
 let roomUsers = {};
 
-let latence = 0.0;
+let latence = 0.285;
 const userLatence = document.getElementById('user-latence');
 const userLatenceLabel = document.getElementById('latence-label');
 
@@ -38,6 +38,10 @@ async function fetchRoom() {
   .catch(error => {
     console.error('Error fetching data:', error);
   });
+}
+
+function webFetchRoom(socket) {
+  socket.send(JSON.stringify({ action: "getRoom", roomId: roomId, noLog: true }));
 }
 
 // Get user by id
@@ -149,7 +153,6 @@ function waitForWebResponse(socket) {
 function webUpdateRoom(socket) {
   socket.send(JSON.stringify({ action: "updateRoom", user: localUser, roomId: roomId,
     timecode: videoSource.currentTime, timestamp: new Date().getTime(), pause: hostPaused , noLog: true}));
-  return waitForWebResponse(socket);
 }
 
 function nextRoomTimecode() {
@@ -241,15 +244,22 @@ document.addEventListener('DOMContentLoaded', () => {
         hostSocket.onopen = function() {
           console.log('Connection HOST WebSocket active');
         }
+        hostSocket.onmessage = function(event) {
+          let decodedMessage = webJsonDecode(event);
+          if (decodedMessage.error) {
+            console.error('WEBSOCKET Error:', decodedMessage.error);
+          } else if (decodedMessage.room) {
+            showUsers(decodedMessage.room);
+          }
+        }
+        
         console.log("Host")
   
         userLatence.outerHTML = ""
         userLatenceLabel.outerHTML = ""
         
         setInterval(() => {
-          Promise.resolve(fetchRoom()).then((room) => {
-            showUsers(room);
-          }) 
+          webFetchRoom(hostSocket);
         }, 1000)
 
         // On pause
@@ -271,6 +281,31 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         // CLIENT
         console.log("Not host")
+        const clientSocket = new WebSocket(`ws://${window.location.hostname}:2310/`);
+        clientSocket.onopen = function() {
+          console.log('Connection CLIENT WebSocket active');
+        }
+        clientSocket.onmessage = function(event) {
+          let decodedMessage = webJsonDecode(event);
+          let room = decodedMessage.room;
+          //console.log("room", room)
+            showUsers(room);
+            if (room.pause !== hostPaused) {
+              hostPaused = room.pause
+              if (hostPaused) {
+                videoSource.pause();
+              } else {
+                MANUAL_PLAY = false
+                funcPlay = true
+                videoSource.play();
+                // nextRoomTimecode().then((timecode) => {
+                //   videoSource.currentTime = timecode + latence
+                  
+                // })
+              }
+              console.log("hostPaused", hostPaused)
+            }
+        }
 
         // add user to room
         fetch(`/join/room`, {
@@ -291,53 +326,38 @@ document.addEventListener('DOMContentLoaded', () => {
           userLatenceLabel.innerHTML = `Latence: ${latence*1000}ms`
         })
         userLatence.value = latence * 1000
+        userLatenceLabel.innerHTML = `Latence: ${latence*1000}ms`
   
         let MANUAL_PLAY = false;
+        let funcPlay= true;
         
-        // Check if host is paused
-        setInterval(() => {
-          Promise.resolve(fetchRoom()).then((room) => {
-            console.log("room", room)
-            showUsers(room);
-            if (room.pause !== hostPaused) {
-              hostPaused = room.pause
-              if (hostPaused) {
-                videoSource.pause();
-              } else {
-                videoSource.play();
-                nextRoomTimecode().then((timecode) => {
-                  videoSource.currentTime = timecode + latence
-                  
-                })
-              }
-              console.log("hostPaused", hostPaused)
-            }
-          })
-        }, 1000)
-  
         // Check timecode 1st
         Promise.resolve(fetchRoomTimecode()).then((timecode) => {
           console.log("timecode", timecode)
           videoSource.currentTime = timecode
         })
+
+        // Check if host is paused
+        setInterval(() => {
+          webFetchRoom(clientSocket);
+        }, 100)
   
         // Check play event
         videoSource.addEventListener('play', () => {
           let startTime = new Date().getTime();
-          if (!MANUAL_PLAY) {
+          if (!MANUAL_PLAY || funcPlay) {
             MANUAL_PLAY = true
             //videoSource.pause(); // Pause client during verification
-            Promise.resolve(fetchRoomTimecode()).then((timecode) => {
-              videoSource.currentTime = timecode
-            })
             // Check timecode
             nextRoomTimecode().then((timecode) => {
               if (!hostPaused) {
                 if (timecode !== undefined) {
                   console.log("timecode", timecode)
-                  latence += (new Date().getTime() - startTime) / 1000
-                  console.log("latence", latence)
-                  videoSource.currentTime = timecode + latence;
+                  let action_latence = (new Date().getTime() - startTime) / 1000;
+                  console.log("diff", latence)
+                  action_latence = action_latence + latence
+                  console.log("action_latence", action_latence)
+                  videoSource.currentTime = timecode + action_latence;
                   //videoSource.play();
                 } else {
                   console.log("timecode undefined !")
@@ -347,7 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             })
           } else {
-            MANUAL_PLAY = false
+              MANUAL_PLAY = false
+            
           }
         })
       }

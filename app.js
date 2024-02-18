@@ -1,3 +1,4 @@
+const fs = require("fs")
 const path = require('path');
 const WebSocket = require('ws');
 const moment = require('moment');
@@ -6,14 +7,13 @@ const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 
 const wss = new WebSocket.Server({ port: 2300 });  // Create websocket server
+const roomWss = new WebSocket.Server({ port: 2310 });
 const app = express();
 const port = 2305;
 
 let globalRooms = {};
 let globalUsers = {};
-let globalFiles = require('./index.json') || [];
-setInterval(() => { globalFiles = require('./index.json') || [];}, 10000);
-
+let globalFiles = [];
 
 function webJsonDecode(event) {
   let msgBody = JSON.parse(event.toString("utf-8"));
@@ -26,7 +26,6 @@ let tempLog = 100;
 wss.on('connection', function connection(ws) {
   console.log(`Client connected`);
   
-
   // On message received
   ws.on('message', async function incoming(event) {
     let msgBody = webJsonDecode(event);
@@ -80,6 +79,13 @@ wss.on('connection', function connection(ws) {
           ws.send(JSON.stringify({error: "Wrong host"}));
           console.log("Wrong host");
         } 
+      } else if (msgBody.action === 'getRoom') {
+        let roomId = msgBody.roomId;
+        if (globalRooms.hasOwnProperty(roomId)) {
+          ws.send(JSON.stringify({room: globalRooms[roomId]}));
+        } else {
+          ws.send(JSON.stringify({error: "Room not found"}));
+        }
       } else {
         ws.send(JSON.stringify({error: "User not found"}));
         console.log("User not found");
@@ -88,7 +94,22 @@ wss.on('connection', function connection(ws) {
   });
 });
 
-
+roomWss.on('connection', function connection(ws) {
+  console.log(`Client connected`);
+  
+  // On message received
+  ws.on('message', function incoming(event) {
+    let msgBody = webJsonDecode(event);
+    if (msgBody.action === 'getRoom') {
+      let roomId = msgBody.roomId;
+      if (globalRooms.hasOwnProperty(roomId)) {
+        ws.send(JSON.stringify({room: globalRooms[roomId]}));
+      } else {
+        ws.send(JSON.stringify({error: "Room not found"}));
+      }
+    }
+  });
+})
 
 
 // Check if all required params are present
@@ -277,4 +298,15 @@ app.use((err, req, res, next) => {
 // Startup
 app.listen(port, () => {
   console.log(`App running at http://localhost:${port}`);
+  setInterval(updateGlobalFiles, 1000);
 });
+
+function updateGlobalFiles() {
+  fs.readdir('./files', (err, files) => {
+    if (err) {
+      console.error('Error while reading files', err);
+      return;
+    }
+    globalFiles = files;
+  });
+}
