@@ -260,6 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         setInterval(() => {
           webFetchRoom(hostSocket);
+          showUsers(localRoom);
         }, 1000)
 
         // On pause
