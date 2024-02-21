@@ -10,7 +10,7 @@ const { initWebSocket, initRoomWebSocket } = require('./src/webSocketManager.js'
 const { writeLog, black_list } = require('./src/security.js');
 
 const app = express();
-const port = 2305;
+const port = process.env.PORT || 2305;
 
 initWebSocket(2300);
 initRoomWebSocket(2310);

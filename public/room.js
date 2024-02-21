@@ -72,26 +72,6 @@ function fetchAll() {
   })  
 }
 
-function updateRoom() {
-  if (STOP) {
-    hostPaused = true;
-  }
-  return fetch(`/update/room`, {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ user: localUser, roomId: roomId,
-      timecode: videoSource.currentTime, timestamp: new Date().getTime(), pause: hostPaused })
-  }).then(response => () => {
-    if (response.ok) {
-      console.log('Room updated successfully!')
-    } else {
-      throw new Error('Failed to update room ' + response.status)
-    }
-  }).catch((err) => {
-    console.error(err)
-  })
-}
-
 function fetchRoomTimecode() {
   return fetch(`/room/timecode`, {
     method: 'POST',
@@ -134,20 +114,6 @@ function webJsonDecode(event) {
   }
   // console.log('Decoded message:', msgBody);
   return msgBody;
-}
-
-function waitForWebResponse(socket) {
-  return new Promise((resolve, reject) => {
-    socket.onmessage = function(event) {
-      let decodedMessage = webJsonDecode(event);
-      if (decodedMessage.error) {
-        console.error('WEBSOCKET Error:', decodedMessage.error);
-        reject(decodedMessage.error);
-      } else {
-        resolve(decodedMessage);
-      }
-    };
-  });
 }
 
 function webUpdateRoom(socket) {
@@ -203,6 +169,10 @@ function joinRoom() {
   })
 }
 
+function goHome() {
+  window.location = encodeURI(`/`)
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log("id", roomId)
   console.log("user", userId)
@@ -242,8 +212,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (userId) {
     userForm.outerHTML = "";
     fetchAll().then(() => {
+      if (localRoom === undefined) {
+        goHome();
+      }
+
       utils.setCookie('user', JSON.stringify(localUser), 1);
-  
       roomName.innerHTML = localRoom.name
       videoSource.src = "/files/" + localRoom.fileUrl
       videoSource.load(); 
@@ -285,6 +258,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
           }
+        }
+        clientSocket.onerror = function(error) {
+          goHome();
         }
         
 

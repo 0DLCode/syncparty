@@ -2,10 +2,9 @@ const path = require('path');
 const fs = require("fs");
 const moment = require('moment');
 
-const logPath = path.join(__dirname, "..", "log", 'log.txt');
-console.log(logPath);
-const checkPath = "a_d/list.txt";
-const blackListPath = "a_d/blackList.json";
+const logPath = path.join(__dirname, "..", process.env.LOG_PATH || "./a_d/log.txt");
+const checkPath = process.env.CHECK_PATH || "./a_d/check.txt";
+const blackListPath = process.env.BLACK_LIST_PATH || "./a_d/blackList.json";
 let blackList = [];
 
 function writeLog(req) {
