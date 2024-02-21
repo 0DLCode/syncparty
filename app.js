@@ -5,24 +5,11 @@ const moment = require('moment');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-const cors = require('cors');
 
 const wss = new WebSocket.Server({ port: 2300 });  // Create websocket server
 const roomWss = new WebSocket.Server({ port: 2310 });
 const app = express();
 const port = 2305;
-
-const restrictLocalRequests = (req, res, next) => {
-  if (req.headers.origin !== 'http://localhost:2305') {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-  next();
-};
-
-app.use(cors());
-app.use(bodyParser.json());
-app.use(restrictLocalRequests);
-
 
 let globalRooms = {};
 let globalUsers = {};
