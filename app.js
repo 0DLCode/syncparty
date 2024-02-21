@@ -9,6 +9,7 @@ let { globalRooms, globalUsers, globalFiles } = require('./src/globals.js');
 const { initWebSocket, initRoomWebSocket } = require('./src/webSocketManager.js');
 const { writeLog, black_list } = require('./src/security.js');
 
+require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 2305;
 

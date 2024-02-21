@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require("fs");
 const moment = require('moment');
+require('dotenv').config();
 
 const logPath = path.join(__dirname, "..", process.env.LOG_PATH || "./a_d/log.txt");
 const checkPath = process.env.CHECK_PATH || "./a_d/check.txt";
