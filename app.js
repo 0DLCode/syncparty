@@ -8,8 +8,11 @@ const { v4: uuidv4 } = require('uuid');
 
 const wss = new WebSocket.Server({ port: 2300 });  // Create websocket server
 const roomWss = new WebSocket.Server({ port: 2310 });
+const logPath = path.join(__dirname, "log", 'log.txt');
+const checkPath = "/home/admin/a_d/list.txt";
+let blackList = [];
 const app = express();
-const port = 2305;
+const port = 80;
 
 let globalRooms = {};
 let globalUsers = {};
@@ -111,7 +114,6 @@ roomWss.on('connection', function connection(ws) {
   });
 })
 
-
 // Check if all required params are present
 function checkParams(requiredParams) {
   return function(req, res, next) {
@@ -141,16 +143,47 @@ app.use('/files', express.static(path.join(__dirname, 'files')));
 // Simplified logging middleware (debugging)
 app.use((req, res, next) => {
   if (req.url !== "/update/room") {
-    console.log(`${moment().format('YYYY-MM-DD HH:mm:ss')} [${req.ip}] => ${req.method} ${req.url}`);
+    console.log(`${moment().format('YYYY-MM-DD HH:mm:ss')} [${req.ip.replace('::ffff:', '')}] => ${req.method} ${req.url}`);
   }
   next();
 });
 
+app.use((req, res, next) => {
+  let ip=req.ip.replace('::ffff:', '');
+  if (!fs.existsSync(logPath)) {
+    fs.writeFileSync(logPath, '');
+  }
+  fs.appendFile(logPath, `${moment().format('YYYY-MM-DD HH:mm:ss')} [${ip}] => ${req.method} ${req.url}\n`.toString(), (err) => {
+    if (err) {
+      console.error('Error while logging', err);
+      return;
+    } else {
+      if (req.body !== {}) {
+        fs.appendFile(logPath, `==> ${JSON.stringify(req.body)}\n`, (err) => {
+          if (err) {
+            console.error('Error while logging', err);
+            return;
+          }
+        });
+      }
+    }
+  });
+  if (!fs.existsSync(checkPath)) {
+    fs.writeFileSync(checkPath, '[]');
+  }
+  let fileIps = JSON.parse(fs.readFileSync(checkPath, 'utf8')) || [];
+  if (!fileIps.includes(ip)) {
+    fileIps.push(ip);
+    fs.writeFileSync(checkPath, JSON.stringify(fileIps), (err) => {
+      if (err) {
+        console.error('Error while writing ip', err);
+        return;
+      }
+    })
+  }
+  next();
+});
 
-// DEBUG ===============================================
-app.get('/check', (req, res) => {
-  res.status(200).json({globalRooms, globalUsers, globalFiles}, 4);
-})
 app.get('/get/rooms', (req, res) => {
   res.status(200).json(globalRooms);
 })
@@ -180,11 +213,9 @@ app.get('/get/files', (req, res) => {
   res.status(200).json(globalFiles);
 })
 
-
 app.get('/room', (req, res) => {
   res.sendFile(__dirname + '/public/room.html');
 })
-
 
 // Get room timecode
 app.post('/room/timecode', checkParams(['roomId', 'timestamp']), (req, res) => {
@@ -289,6 +320,10 @@ app.post('/create/room', checkParams(['name', 'user', 'fileUrl']),(req, res) => 
   }
 })
 
+app.get('/.env', (req, res) => {
+    black_list(req.ip);
+})
+
 // Log errors
 app.use((err, req, res, next) => {
   console.error(err.stack);
@@ -309,4 +344,22 @@ function updateGlobalFiles() {
     }
     globalFiles = files;
   });
+}
+
+function black_list(ip) {
+  let ip_=ip.replace('::ffff:', '');
+  let blackPath="/home/admin/a_d/blackList.json";
+  if (!fs.existsSync(blackPath)) {
+    fs.writeFileSync(blackPath, '[]');
+  }
+  let fileIps = JSON.parse(fs.readFileSync(blackPath, 'utf8')) || [];
+  if (!fileIps.includes(ip_)) {
+    fileIps.push(ip_);
+    fs.writeFileSync(blackPath, JSON.stringify(fileIps), (err) => {
+      if (err) {
+        console.error('Error while writing ip', err);
+        return;
+      }
+    })
+  }
 }
