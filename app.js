@@ -7,14 +7,10 @@ const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 let { globalRooms, globalUsers, globalFiles } = require('./src/globals.js');
 const { initWebSocket, initRoomWebSocket } = require('./src/webSocketManager.js');
+const { writeLog, black_list } = require('./src/security.js');
 
-const logPath = path.join(__dirname, "log", 'log.txt');
-const checkPath = "a_d/list.txt";
-const blackListPath = "a_d/blackList.json";
-let blackList = [];
 const app = express();
-const port = 80;
-let tempLog = 100;
+const port = 2305;
 
 initWebSocket(2300);
 initRoomWebSocket(2310);
@@ -54,38 +50,7 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-  let ip=req.ip.replace('::ffff:', '');
-  if (!fs.existsSync(logPath)) {
-    fs.writeFileSync(logPath, '');
-  }
-  fs.appendFile(logPath, `${moment().format('YYYY-MM-DD HH:mm:ss')} [${ip}] => ${req.method} ${req.url}\n`.toString(), (err) => {
-    if (err) {
-      console.error('Error while logging', err);
-      return;
-    } else {
-      if (req.body) {
-        fs.appendFile(logPath, `==> ${JSON.stringify(req.body)}\n`, (err) => {
-          if (err) {
-            console.error('Error while logging', err);
-            return;
-          }
-        });
-      }
-    }
-  });
-  if (!fs.existsSync(checkPath)) {
-    fs.writeFileSync(checkPath, '[]');
-  }
-  let fileIps = JSON.parse(fs.readFileSync(checkPath, 'utf8')) || [];
-  if (!fileIps.includes(ip)) {
-    fileIps.push(ip);
-    fs.writeFileSync(checkPath, JSON.stringify(fileIps), (err) => {
-      if (err) {
-        console.error('Error while writing ip', err);
-        return;
-      }
-    })
-  }
+  writeLog(req);
   next();
 });
 
@@ -99,7 +64,7 @@ app.post('/get/room', checkParams(['roomId']),(req, res) => {
   if (globalRooms.hasOwnProperty(roomId)) {
     res.status(200).json(globalRooms[roomId]);
   } else {
-    res.status(404).send('Room not found');
+    res.status(404).json({error: 'Room not found'});
   }
 })
 app.get('/get/users', (req, res) => {
@@ -111,7 +76,7 @@ app.post('/get/user', checkParams(['userId']),(req, res) => {
   if (globalUsers.hasOwnProperty(userId)) {
     res.status(200).json(globalUsers[userId]);
   } else {
-    res.status(404).send('User not found');
+    res.status(404).json({error: 'User not found'});
   }
 })
 app.get('/get/files', (req, res) => {
@@ -138,7 +103,7 @@ app.post('/room/timecode', checkParams(['roomId', 'timestamp']), (req, res) => {
     res.status(200).json(timecode);
     console.log(`get timecode: ${timecode} + ${latence*1000}ms`);
   } else {
-    res.status(404).send('Room not found');
+    res.status(404).json({error: 'Room not found'});
   }
 })
 
@@ -166,28 +131,65 @@ app.post('/update/room', checkParams(['user', 'roomId', 'timecode', 'timestamp',
       }
       res.status(201).send('ok');
     } else {
-      res.status(401).send('Wrong host');
+      res.status(401).json({error: 'Wrong host'});
       console.log("Wrong host");
     } 
   } else {
-    res.status(404).send('User not found');
+    res.status(404).json({error: 'User not found'});
     console.log("User not found");
   }
 })
 
 // Add user to room
-app.post('/join/room', checkParams(['user', 'roomId']),(req, res) => {
+app.post('/room/join', checkParams(['user', 'roomId']),(req, res) => {
   const formData = req.body;
   const user = formData.user;
   const roomId = formData.roomId;
 
-  for (let oldUser of globalRooms[roomId].users) {
-    if (oldUser.uuid === user.uuid) {
-      console.log("User already in room");
-      return res.status(409).send('User already in room');
+  if (globalUsers.hasOwnProperty(user.uuid)) {
+    if (globalRooms.hasOwnProperty(roomId)) {
+      for (let oldUser of globalRooms[roomId].users) {
+        if (oldUser.uuid == user.uuid) {
+          console.log("User already in room");
+          return res.status(409).json({error: `User already in room`});
+        }
+      }
+      globalRooms[roomId].users.push(user);
+      return res.status(201).send('ok');
+    } else {
+      return res.status(404).json({error: 'Room not found'});
     }
+  } else {
+    return res.status(404).json({error: 'User not found'});
   }
-  globalRooms[roomId].users.push(user);
+  
+})
+
+// Remove user from room
+app.post('/room/exit', checkParams(['user', 'roomId']),(req, res) => {
+  const formData = req.body;
+  const user = formData.user;
+  const roomId = formData.roomId;
+
+  if (globalUsers.hasOwnProperty(user.uuid)) {
+    if (globalRooms.hasOwnProperty(roomId)) {
+      globalRooms[roomId].users.splice(globalRooms[roomId].users.indexOf(user), 1);
+      // if (globalRooms[roomId].host.uuid == user.uuid) {
+      //   if (globalRooms[roomId].users.length > 0) {
+      //     globalRooms[roomId].host = globalRooms[roomId].users[0];
+      //   } else {
+      //     delete globalRooms[roomId]
+      //   }
+        
+      // }
+    } else {
+      console.log("Room not found");
+      return res.status(404).json({error: 'Room not found'});
+    }
+  } else {
+    console.log("User not found");
+    return res.status(404).json({error: 'User not found'});
+  }
   res.status(201).send('ok');
 })
 
@@ -211,17 +213,17 @@ app.post('/create/room', checkParams(['name', 'user', 'fileUrl']),(req, res) => 
 
   if (globalUsers.hasOwnProperty(user.uuid)) {
     let roomId = uuidv4();
-    if (user.uuid.roomHosted) {
-      uuidExisting = globalUsers[user.uuid].roomHosted;
-      delete globalRooms[uuidExisting];
+    if (globalUsers[user.uuid].roomHosted) {
+      let roomExistingId = globalUsers[user.uuid].roomHosted;
+      console.log("User already in room", roomExistingId);
+      delete globalRooms[roomExistingId];
     }
     globalUsers[user.uuid].roomHosted = roomId;
-    globalRooms[roomId] = { name: name, id: roomId,
-      host: user, users: [user], fileUrl: fileUrl, timecode: 0 };
-    res.status(201).json({ roomId: roomId })  // Quelque chose comme ça ;-;
+    globalRooms[roomId] = { name: name, id: roomId, host: user, users: [user], fileUrl: fileUrl, timecode: 0 };
+    res.status(201).json({ roomId: roomId });
     console.log("==> Room created", globalRooms[roomId]);
   } else {
-    res.status(404).send('User not found');
+    res.status(404).json({error: 'User not found'});
   }
 })
 
@@ -249,22 +251,4 @@ function updateGlobalFiles() {
     }
     globalFiles = files;
   });
-}
-
-function black_list(ip) {
-  let ip_=ip.replace('::ffff:', '');
-  let blackPath="/home/admin/a_d/blackList.json";
-  if (!fs.existsSync(blackPath)) {
-    fs.writeFileSync(blackPath, '[]');
-  }
-  let fileIps = JSON.parse(fs.readFileSync(blackPath, 'utf8')) || [];
-  if (!fileIps.includes(ip_)) {
-    fileIps.push(ip_);
-    fs.writeFileSync(blackPath, JSON.stringify(fileIps), (err) => {
-      if (err) {
-        console.error('Error while writing ip', err);
-        return;
-      }
-    })
-  }
 }

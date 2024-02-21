@@ -97,4 +97,18 @@ function checkUserCookie() {
   return null
 }
 
+function webJsonDecode(event) {
+  let msgBody;
+  try {
+    msgBody = JSON.parse(event.data.toString("utf-8"));
+  } catch (e) {
+    console.error('Error decoding message:', e);
+    return null;
+  }
+  // console.log('Decoded message:', msgBody);
+  return msgBody;
+}
+
+
+
 export { createUser, getRooms, getFiles, setCookie, checkUserCookie }

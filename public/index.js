@@ -47,6 +47,7 @@ function showRooms() {
     let roomElement = document.createElement('li');
     roomElement.id = 'room-element';
     roomElement.innerHTML = `<h3>${room.name}</h3>` +
+    `<p>==>  [HOST] ${room.host.username}</p>` +
     `<a href="/room?id=${room.id}&userId=${localUser.uuid}">${room.fileUrl.split("/").pop()}</a>`;
     roomList.appendChild(roomElement);
   }

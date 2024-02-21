@@ -188,6 +188,21 @@ function nextRoomTimecode() {
 });
 }
 
+function joinRoom() {
+  // add user to room
+  fetch(`/room/join`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ roomId: roomId, user: localUser })
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error('Failed to join room ' + response.status)
+    }
+  }).catch((err) => {
+    console.error(err)
+  })
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   console.log("id", roomId)
   console.log("user", userId)
@@ -228,7 +243,6 @@ document.addEventListener('DOMContentLoaded', () => {
     userForm.outerHTML = "";
     fetchAll().then(() => {
       utils.setCookie('user', JSON.stringify(localUser), 1);
-      // Remove userId from url to create a share link
   
       roomName.innerHTML = localRoom.name
       videoSource.src = "/files/" + localRoom.fileUrl
@@ -240,28 +254,43 @@ document.addEventListener('DOMContentLoaded', () => {
       
       if (localRoom.host.uuid === localUser.uuid) {
         // HOST
+        console.log("Host")
+
+        // Init WebSocket
         const hostSocket = new WebSocket(`ws://${window.location.hostname}:2300/`);
+        const clientSocket = new WebSocket(`ws://${window.location.hostname}:2310/`);
         hostSocket.onopen = function() {
           console.log('Connection HOST WebSocket active');
         }
-        hostSocket.onmessage = function(event) {
+        clientSocket.onopen = function() {
+          console.log('Connection CLIENT (fetch users) WebSocket active');
+          // Fetch room
+          setInterval(() => {
+            webFetchRoom(clientSocket);
+          }, 100)
+          if (!localRoom.users.find(user => user.uuid === localUser.uuid)) {
+            joinRoom();
+          }
+          showUsers(localRoom);
+        }
+        clientSocket.onmessage = function(event) {
           let decodedMessage = webJsonDecode(event);
           if (decodedMessage.error) {
             console.error('WEBSOCKET Error:', decodedMessage.error);
           } else if (decodedMessage.room) {
-            showUsers(decodedMessage.room);
+            // If host have left the room
+            if (decodedMessage.room.users.length != localRoom.users.length) {
+              localRoom = decodedMessage.room
+              showUsers(localRoom);
+            }
+            
           }
         }
         
-        console.log("Host")
-  
+
+        // Init UI
         userLatence.outerHTML = ""
         userLatenceLabel.outerHTML = ""
-        
-        setInterval(() => {
-          webFetchRoom(hostSocket);
-          showUsers(localRoom);
-        }, 1000)
 
         // On pause
         videoSource.addEventListener('pause', () => {
@@ -278,48 +307,35 @@ document.addEventListener('DOMContentLoaded', () => {
           console.log("play")
           setInterval(() => { if (!STOP && !hostPaused) webUpdateRoom(hostSocket) }, 10)
         })
-        
       } else {
         // CLIENT
         console.log("Not host")
         const clientSocket = new WebSocket(`ws://${window.location.hostname}:2310/`);
         clientSocket.onopen = function() {
           console.log('Connection CLIENT WebSocket active');
+          // Check if host is paused
+          setInterval(() => {
+            webFetchRoom(clientSocket);
+          }, 10)
         }
         clientSocket.onmessage = function(event) {
           let decodedMessage = webJsonDecode(event);
           let room = decodedMessage.room;
-          //console.log("room", room)
-            showUsers(room);
-            if (room.pause !== hostPaused) {
-              hostPaused = room.pause
-              if (hostPaused) {
-                videoSource.pause();
-              } else {
-                MANUAL_PLAY = false
-                funcPlay = true
-                videoSource.play();
-                // nextRoomTimecode().then((timecode) => {
-                //   videoSource.currentTime = timecode + latence
-                  
-                // })
-              }
-              console.log("hostPaused", hostPaused)
+          showUsers(room);
+          if (room.pause !== hostPaused) {
+            hostPaused = room.pause
+            if (hostPaused) {
+              videoSource.pause();
+            } else {
+              MANUAL_PLAY = false
+              funcPlay = true
+              videoSource.play();
             }
+            console.log("hostPaused", hostPaused)
+          }
         }
 
-        // add user to room
-        fetch(`/join/room`, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({ roomId: roomId, user: localUser })
-        }).then((response) => {
-          if (response.ok) {
-            return response.json()
-          } else {
-            throw new Error('Failed to join room ' + response.status)
-          }
-        })
+        joinRoom();
   
         // Set manual latence
         userLatence.addEventListener('input', () => {
@@ -337,18 +353,13 @@ document.addEventListener('DOMContentLoaded', () => {
           console.log("timecode", timecode)
           videoSource.currentTime = timecode
         })
-
-        // Check if host is paused
-        setInterval(() => {
-          webFetchRoom(clientSocket);
-        }, 100)
   
         // Check play event
         videoSource.addEventListener('play', () => {
           let startTime = new Date().getTime();
           if (!MANUAL_PLAY || funcPlay) {
             MANUAL_PLAY = true
-            //videoSource.pause(); // Pause client during verification
+
             // Check timecode
             nextRoomTimecode().then((timecode) => {
               if (!hostPaused) {
@@ -359,7 +370,6 @@ document.addEventListener('DOMContentLoaded', () => {
                   action_latence = action_latence + latence
                   console.log("action_latence", action_latence)
                   videoSource.currentTime = timecode + action_latence;
-                  //videoSource.play();
                 } else {
                   console.log("timecode undefined !")
                 }
@@ -375,6 +385,17 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     })
   }
-  
-  
+
+  // On exit page
+  window.addEventListener('beforeunload', function(event) {
+    fetch(`/room/exit`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ roomId: roomId, user: localUser })
+    }).then((response) => {
+      if (!response.ok) {
+        throw new Error('Failed to exit room ' + response.status)
+      }
+    })
+  });
 })

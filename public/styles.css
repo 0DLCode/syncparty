@@ -13,6 +13,17 @@ h1 {
   margin-bottom: 20px;
   background-color: #093A3E;
 }
+h3 {
+  font-weight: bold;
+  text-align: center;
+  margin: 5px;
+}
+p {
+  font-family:'Courier New', Courier, monospace;
+  font-size: 15px;
+  margin: 2px;
+  margin-bottom: 15px;
+}
 strong {
   font-weight: 1500;
   color: rgb(173, 173, 25);
@@ -28,7 +39,7 @@ ul#list-rooms {
   list-style: none;
   font-size: 20px;
   border-radius: 4px;
-  padding: 10px;
+  padding: 15px;
   background-color: #8AA29E;
   margin: 5px;
 }
