@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-bad update
-=======
 # syncparty
->>>>>>> parent of 50627ed (Update README.md)
+- `git clone https://github.com/0DLCode/syncparty`
+- `npm install`
+- `npm start`
