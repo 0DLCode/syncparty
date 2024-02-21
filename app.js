@@ -5,114 +5,19 @@ const moment = require('moment');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
+let { globalRooms, globalUsers, globalFiles } = require('./src/globals.js');
+const { initWebSocket, initRoomWebSocket } = require('./src/webSocketManager.js');
 
-const wss = new WebSocket.Server({ port: 2300 });  // Create websocket server
-const roomWss = new WebSocket.Server({ port: 2310 });
 const logPath = path.join(__dirname, "log", 'log.txt');
-const checkPath = "/home/admin/a_d/list.txt";
+const checkPath = "a_d/list.txt";
+const blackListPath = "a_d/blackList.json";
 let blackList = [];
 const app = express();
 const port = 80;
-
-let globalRooms = {};
-let globalUsers = {};
-let globalFiles = [];
-
-function webJsonDecode(event) {
-  let msgBody = JSON.parse(event.toString("utf-8"));
-  // console.log('Decoded message:', msgBody);
-  return msgBody;
-}
-
 let tempLog = 100;
-// Handle WebSocket
-wss.on('connection', function connection(ws) {
-  console.log(`Client connected`);
-  
-  // On message received
-  ws.on('message', async function incoming(event) {
-    let msgBody = webJsonDecode(event);
-    if (msgBody.noLog === undefined) {
-      console.log('Decoded message:', msgBody);
-    }
-    
-    if (msgBody.action === 'nextTimecode') {
-      // If client ask for next timecode
-      
-      let roomId = msgBody.roomId;
-      let lastTimecode = msgBody.lastTimecode;
-      if (globalRooms.hasOwnProperty(roomId)) {
-        while (globalRooms[roomId].timecode === lastTimecode) {
-          await new Promise(resolve => setTimeout(resolve, 100)); // wait 100ms
-        }
-        let timecode = globalRooms[roomId].timecode;
-        ws.send(JSON.stringify({timecode: timecode}));
-      } else {
-        console.log("Room not found");
-        ws.send(JSON.stringify({error: "Room not found"}));
-      }
-    } else if (msgBody.action === 'updateRoom') {
-      // If host ask to update room
 
-      const user = msgBody.user;
-      const roomId = msgBody.roomId;
-      const pause = msgBody.pause;
-      let timecode = msgBody.timecode;
-      let timestamp = msgBody.timestamp;
-    
-      let latence = (new Date().getTime() - timestamp) / 1000 ;
-    
-      if (globalUsers.hasOwnProperty(user.uuid)) {
-        if (globalUsers[user.uuid].roomHosted === roomId) {
-          if (pause) {
-            console.log("paused at", timecode);
-            globalRooms[roomId]['pause'] = true;
-            globalRooms[roomId].timecode = timecode; 
-          } else {
-            globalRooms[roomId].timecode = timecode; // + latence;
-            globalRooms[roomId].pause = false;
-            if (tempLog == 100) {
-              console.log(`[LOG/100] timecode updated: ${timecode} (${latence*1000}ms)`); // DEBUG ===================
-              tempLog = 0;
-            }
-            tempLog++;
-          }
-          ws.send(JSON.stringify({ok: true}));
-        } else {
-          ws.send(JSON.stringify({error: "Wrong host"}));
-          console.log("Wrong host");
-        } 
-      } else if (msgBody.action === 'getRoom') {
-        let roomId = msgBody.roomId;
-        if (globalRooms.hasOwnProperty(roomId)) {
-          ws.send(JSON.stringify({room: globalRooms[roomId]}));
-        } else {
-          ws.send(JSON.stringify({error: "Room not found"}));
-        }
-      } else {
-        ws.send(JSON.stringify({error: "User not found"}));
-        console.log("User not found");
-      }
-    }
-  });
-});
-
-roomWss.on('connection', function connection(ws) {
-  console.log(`Client connected`);
-  
-  // On message received
-  ws.on('message', function incoming(event) {
-    let msgBody = webJsonDecode(event);
-    if (msgBody.action === 'getRoom') {
-      let roomId = msgBody.roomId;
-      if (globalRooms.hasOwnProperty(roomId)) {
-        ws.send(JSON.stringify({room: globalRooms[roomId]}));
-      } else {
-        ws.send(JSON.stringify({error: "Room not found"}));
-      }
-    }
-  });
-})
+initWebSocket(2300);
+initRoomWebSocket(2310);
 
 // Check if all required params are present
 function checkParams(requiredParams) {
@@ -158,7 +63,7 @@ app.use((req, res, next) => {
       console.error('Error while logging', err);
       return;
     } else {
-      if (req.body !== {}) {
+      if (req.body) {
         fs.appendFile(logPath, `==> ${JSON.stringify(req.body)}\n`, (err) => {
           if (err) {
             console.error('Error while logging', err);
