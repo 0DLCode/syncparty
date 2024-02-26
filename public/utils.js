@@ -110,5 +110,4 @@ function webJsonDecode(event) {
 }
 
 
-
 export { createUser, getRooms, getFiles, setCookie, checkUserCookie }

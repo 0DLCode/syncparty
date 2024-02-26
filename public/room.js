@@ -23,6 +23,8 @@ console.log(window.location.origin);
 
 let STOP = false;
 let hostPaused = false;
+let baseUrlEmbed = "";
+let urlEmbed = "";
 
 // Get the room by id
 async function fetchRoom() {
@@ -169,6 +171,25 @@ function joinRoom() {
   })
 }
 
+function phUrl2embed(url) {
+  baseUrlEmbed = "https://www.pornhub.com/embed/"
+  urlEmbed = baseUrlEmbed + new URLSearchParams(url).get('viewkey').toString()
+  return urlEmbed;
+}
+
+function setTimecode(timecode) {
+  if (timecode < 0) {
+    timecode = 0
+  }
+  if (urlEmbed) {
+    const params = new URLSearchParams();
+    params.append('t', timecode);
+    videoSource.src = urlEmbed + '?' + params.toString();
+  } else {
+    videoSource.currentTime = timecode;
+  }
+}
+
 function goHome() {
   window.location = encodeURI(`/`)
 }
@@ -212,13 +233,16 @@ document.addEventListener('DOMContentLoaded', () => {
   if (userId) {
     userForm.outerHTML = "";
     fetchAll().then(() => {
-      if (localRoom === undefined) {
+      if (localRoom.users === undefined) {
         goHome();
       }
 
       utils.setCookie('user', JSON.stringify(localUser), 1);
       roomName.innerHTML = localRoom.name
-      videoSource.src = "/files/" + localRoom.fileUrl
+      if (localRoom.fileUrl.includes("pornhub.com") && localRoom.fileUrl.includes("embed")) {
+        videoSource.outerHTML = "<iframe width=\"100%\" height=\"100%\" src=\"" + phUrl2embed(localRoom.fileUrl) + "\" scrolling=\"no\" frameborder=\"0\" allowfullscreen></iframe>";
+      }
+      videoSource.src = localRoom.fileUrl
       videoSource.load(); 
       if (!MediaSource.isTypeSupported(mimeCodec)) {
         document.getElementsByTagName('body')[0].outerHTML = `<iframe width="${window.innerWidth-25}" height="${window.innerHeight-25}" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"></iframe>`
@@ -270,7 +294,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // On pause
         videoSource.addEventListener('pause', () => {
-          console.log("pause", videoSource.currentTime)
+          if (urlEmbed) {
+            console.log("pause")
+          } else {
+            console.log("pause" + videoSource.currentTime)
+          }
           STOP = true
           hostPaused = true
           webUpdateRoom(hostSocket);
