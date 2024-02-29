@@ -219,6 +219,9 @@ app.post('/create/room', checkParams(['name', 'user', 'fileUrl']),(req, res) => 
       console.log("User already in room", roomExistingId);
       delete globalRooms[roomExistingId];
     }
+    if (globalFiles.includes(fileUrl)) {
+      fileUrl = encodeURI(`/files/${fileUrl}`);
+    }
     globalUsers[user.uuid].roomHosted = roomId;
     globalRooms[roomId] = { name: name, id: roomId, host: user, users: [user], fileUrl: fileUrl, timecode: 0 };
     res.status(201).json({ roomId: roomId });

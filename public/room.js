@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       utils.setCookie('user', JSON.stringify(localUser), 1);
       roomName.innerHTML = localRoom.name
-      videoSource.src = "/files/" + localRoom.fileUrl
+      videoSource.src = localRoom.fileUrl
       videoSource.load(); 
       if (!MediaSource.isTypeSupported(mimeCodec)) {
         document.getElementsByTagName('body')[0].outerHTML = `<iframe width="${window.innerWidth-25}" height="${window.innerHeight-25}" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"></iframe>`
