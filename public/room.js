@@ -22,7 +22,8 @@ const userLatenceLabel = document.getElementById('latence-label');
 console.log(window.location.origin);
 
 let STOP = false;
-let hostPaused = false;
+let hostPaused = true;
+let IsRoomDeleted = false;
 
 // Get the room by id
 async function fetchRoom() {
@@ -169,8 +170,27 @@ function joinRoom() {
   })
 }
 
+function nextRoom() {
+  fetch('/get/user', { 
+    method: 'POST', 
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ userId: localRoom.host.uuid })
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error('Failed to get user ' + response.status)
+    }
+    return response.json();
+  }).then((data) => {
+    let nextRoom = data.roomHosted;
+    window.location = encodeURI(`/room?id=${nextRoom}&userId=${localUser.uuid}`);
+  }).catch((err) => {
+    console.error(err)
+    //goHome();
+  })
+}
+
 function goHome() {
-  window.location = encodeURI(`/`)
+  window.location.href = encodeURI(`/`)
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -205,8 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   // If the room id is not provided in the url
   if (!roomId) {
-    window.location.search = window.location.search.replace(window.location.search.split("?")[1], '');
-    window.location = "/index.html";
+    window.location.href = "/index.html";
   } 
 
   if (userId) {
@@ -250,6 +269,9 @@ document.addEventListener('DOMContentLoaded', () => {
           let decodedMessage = webJsonDecode(event);
           if (decodedMessage.error) {
             console.error('WEBSOCKET Error:', decodedMessage.error);
+            if (decodedMessage.error == "Room not found") {
+              goHome();
+            }
           } else if (decodedMessage.room) {
             // If host have left the room
             if (decodedMessage.room.users.length != localRoom.users.length) {
@@ -296,19 +318,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         clientSocket.onmessage = function(event) {
           let decodedMessage = webJsonDecode(event);
-          let room = decodedMessage.room;
-          showUsers(room);
-          if (room.pause !== hostPaused) {
-            hostPaused = room.pause
-            if (hostPaused) {
-              videoSource.pause();
-            } else {
-              MANUAL_PLAY = false
-              funcPlay = true
-              videoSource.play();
+          if (decodedMessage.error) {
+            console.error('WEBSOCKET Error:', decodedMessage.error);
+            if (decodedMessage.error == "Room not found") {
+              nextRoom();
             }
-            console.log("hostPaused", hostPaused)
+          } else {
+            let room = decodedMessage.room;
+            showUsers(room);
+            if (room.pause !== hostPaused) {
+              hostPaused = room.pause
+              if (hostPaused) {
+                videoSource.pause();
+              } else {
+                MANUAL_PLAY = false
+                funcPlay = true
+                videoSource.play();
+              }
+              console.log("hostPaused", hostPaused)
+            }
           }
+          
+        }
+        clientSocket.onerror = function(error) {
+          console.error('WebSocket Error:', error);
+          nextRoom();
         }
 
         joinRoom();

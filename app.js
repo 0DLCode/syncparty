@@ -142,29 +142,27 @@ app.post('/update/room', checkParams(['user', 'roomId', 'timecode', 'timestamp',
 })
 
 // Add user to room
-app.post('/room/join', checkParams(['user', 'roomId']),(req, res) => {
+app.post('/room/join', checkParams(['user', 'roomId']), (req, res) => {
   const formData = req.body;
   const user = formData.user;
   const roomId = formData.roomId;
 
-  if (globalUsers.hasOwnProperty(user.uuid)) {
-    if (globalRooms.hasOwnProperty(roomId)) {
-      for (let oldUser of globalRooms[roomId].users) {
-        if (oldUser.uuid == user.uuid) {
-          console.log("User already in room");
-          return res.status(409).json({error: `User already in room`});
-        }
-      }
-      globalRooms[roomId].users.push(user);
-      return res.status(201).send('ok');
-    } else {
-      return res.status(404).json({error: 'Room not found'});
-    }
-  } else {
+  if (!globalUsers.hasOwnProperty(user.uuid)) {
     return res.status(404).json({error: 'User not found'});
   }
-  
-})
+
+  if (!globalRooms.hasOwnProperty(roomId)) {
+    return res.status(404).json({error: 'Room not found'});
+  }
+
+  if (globalRooms[roomId].users.some(oldUser => oldUser.uuid === user.uuid)) {
+    console.log("User already in room");
+    return res.status(409).json({error: `User already in room`});
+  }
+
+  globalRooms[roomId].users.push(user);
+  return res.status(201).send('ok');
+});
 
 // Remove user from room
 app.post('/room/exit', checkParams(['user', 'roomId']),(req, res) => {
