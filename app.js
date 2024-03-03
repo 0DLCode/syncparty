@@ -221,7 +221,7 @@ app.post('/create/room', checkParams(['name', 'user', 'fileUrl']),(req, res) => 
       fileUrl = encodeURI(`/files/${fileUrl}`);
     }
     globalUsers[user.uuid].roomHosted = roomId;
-    globalRooms[roomId] = { name: name, id: roomId, host: user, users: [user], fileUrl: fileUrl, timecode: 0 };
+    globalRooms[roomId] = { name: name, id: roomId, host: user, users: [user], fileUrl: fileUrl, timecode: 0, pause: true };
     res.status(201).json({ roomId: roomId });
     console.log("==> Room created", globalRooms[roomId]);
   } else {
