@@ -90,6 +90,36 @@ function fetchRoomTimecode() {
   })
 }
 
+// Fetch subtitles .srt or .ass
+async function fetchSubtitleFiles(selectedFile) {
+  const response = await fetch('/get/files');
+  const files = await response.json();
+  // Filtrer les fichiers pour ne garder que les sous-titres .srt ou .ass avec le même nom de fichier que celui sélectionné
+  const subtitleFiles = files.filter(file => {
+    const fileNameWithoutExtension = selectedFile.split('.').slice(0, -1).join('.');
+    const fileExtension = file.split('.').pop();
+    return (fileExtension === 'srt' || fileExtension === 'ass') && file.startsWith(fileNameWithoutExtension);
+  });
+  console.log("Subtitle files", subtitleFiles);
+  return subtitleFiles;
+}
+
+async function updateSubtitleSelect(selectedSubtitle) {
+  if (videoSource.textTracks.length > 0) {
+    videoSource.textTracks[0].mode = 'hidden'; // Masquer la piste de sous-titres actuelle
+  }
+  const track = document.createElement('track');
+  track.src = `./files/${selectedSubtitle}`;
+  track.kind = 'subtitles';
+  track.srclang = 'fr'; // Langue des sous-titres (remplacez par la langue appropriée si nécessaire)
+  track.label = 'French'; // Libellé des sous-titres (remplacez par le libellé approprié si nécessaire)
+  videoSource.appendChild(track); // Ajouter la nouvelle piste de sous-titres
+  track.addEventListener('load', () => {
+    videoSource.textTracks[0].mode = 'showing'; // Afficher la nouvelle piste de sous-titres
+  });
+}
+
+
 function showUsers(room) {
   listUsersElement.innerHTML = "";
   for (let user in room.users) {
@@ -238,6 +268,19 @@ document.addEventListener('DOMContentLoaded', () => {
       utils.setCookie('user', JSON.stringify(localUser), 1);
       roomName.innerHTML = localRoom.name
       videoSource.src = localRoom.fileUrl
+      const subtitleSelect = document.getElementById('subtitle-select');
+      subtitleSelect.innerHTML = "";
+      let fileSubtitles = fetchSubtitleFiles(localRoom.fileUrl);
+      for (let subtitle in fileSubtitles) {
+        subtitle = fileSubtitles[subtitle];
+        subtitleSelect.innerHTML += `<option value="${subtitle}">${subtitle}</option>`
+      }
+      // Add event listener to select subtitle file
+      subtitleSelect.addEventListener('change', async () => {
+        const selectedFile = subtitleSelect.value;
+        updateSubtitleSelect(selectedFile);
+      });
+
       videoSource.load(); 
       if (!MediaSource.isTypeSupported(mimeCodec)) {
         document.getElementsByTagName('body')[0].outerHTML = `<iframe width="${window.innerWidth-25}" height="${window.innerHeight-25}" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"></iframe>`

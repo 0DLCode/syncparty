@@ -5,9 +5,9 @@ const moment = require('moment');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
-let { globalRooms, globalUsers, globalFiles } = require('./src/globals.js');
+let { globalRooms, globalUsers, globalFiles, globalWarns, warnLimit } = require('./src/globals.js');
 const { initWebSocket, initRoomWebSocket } = require('./src/webSocketManager.js');
-const { writeLog, black_list } = require('./src/security.js');
+const { writeLog, black_list, warnClient, checkWarn } = require('./src/security.js');
 
 require('dotenv').config();
 const app = express();
@@ -42,6 +42,14 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/files', express.static(path.join(__dirname, 'files')));
 
+// Check black listed ip
+app.use((req, res, next) => {
+  if (checkWarn(req.ip)) {
+    next();
+  } else {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+})
 // Simplified logging middleware (debugging)
 app.use((req, res, next) => {
   if (req.url !== "/update/room") {
@@ -49,7 +57,7 @@ app.use((req, res, next) => {
   }
   next();
 });
-
+// Write log
 app.use((req, res, next) => {
   writeLog(req);
   next();
@@ -173,14 +181,6 @@ app.post('/room/exit', checkParams(['user', 'roomId']),(req, res) => {
   if (globalUsers.hasOwnProperty(user.uuid)) {
     if (globalRooms.hasOwnProperty(roomId)) {
       globalRooms[roomId].users.splice(globalRooms[roomId].users.indexOf(user), 1);
-      // if (globalRooms[roomId].host.uuid == user.uuid) {
-      //   if (globalRooms[roomId].users.length > 0) {
-      //     globalRooms[roomId].host = globalRooms[roomId].users[0];
-      //   } else {
-      //     delete globalRooms[roomId]
-      //   }
-        
-      // }
     } else {
       console.log("Room not found");
       return res.status(404).json({error: 'Room not found'});
@@ -233,10 +233,17 @@ app.get('/.env', (req, res) => {
     black_list(req.ip);
 })
 
+// Handle 404
+app.use((req, res, next) => {
+  warnClient(req.ip);
+  res.status(404).json({ error: `You got warned ['${req.ip}'] ${globalWarns[req.ip]} times  (${warnLimit} warns max)` });
+  console.log(`==> Warned [${req.ip}] ${globalWarns[req.ip]} times`);
+});
+
 // Log errors
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send(`Error occurred! ${err.stack}`);
+  res.status(500).send(`Error occurred!`);
 });
 
 // Startup

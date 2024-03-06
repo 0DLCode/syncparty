@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require("fs");
 const moment = require('moment');
+const {globalWarns, warnLimit} = require('./globals.js');
 require('dotenv').config();
 
 const logPath = path.join(__dirname, "..", process.env.LOG_PATH || "./a_d/log.txt");
@@ -45,14 +46,13 @@ function writeLog(req) {
 
 function black_list(ip) {
   let ip_=ip.replace('::ffff:', '');
-  let blackPath="/home/admin/a_d/blackList.json";
-  if (!fs.existsSync(blackPath)) {
-    fs.writeFileSync(blackPath, '[]');
+  if (!fs.existsSync(blackListPath)) {
+    fs.writeFileSync(blackListPath, '[]');
   }
-  let fileIps = JSON.parse(fs.readFileSync(blackPath, 'utf8')) || [];
+  let fileIps = JSON.parse(fs.readFileSync(blackListPath, 'utf8')) || [];
   if (!fileIps.includes(ip_)) {
     fileIps.push(ip_);
-    fs.writeFileSync(blackPath, JSON.stringify(fileIps), (err) => {
+    fs.writeFileSync(blackListPath, JSON.stringify(fileIps), (err) => {
       if (err) {
         console.error('Error while writing ip', err);
         return;
@@ -61,4 +61,23 @@ function black_list(ip) {
   }
 }
 
-module.exports = { black_list, writeLog }
+function warnClient(ip) {
+  if (globalWarns.hasOwnProperty(ip)) {
+    globalWarns[ip] += 1;
+  } else {
+    globalWarns[ip] = 1;
+  }
+  if (globalWarns[ip] >= warnLimit) {
+    black_list(ip);
+  }
+}
+
+function checkWarn(ip) {
+  if (globalWarns.hasOwnProperty(ip) && globalWarns[ip] >= warnLimit) {
+    return false
+  } else {
+    return true
+  }
+}
+
+module.exports = { black_list, writeLog, warnClient, checkWarn };

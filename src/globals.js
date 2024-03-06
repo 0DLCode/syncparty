@@ -1,5 +1,8 @@
 let globalRooms = {};
 let globalUsers = {};
 let globalFiles = [];
+let globalWarns = {};
 
-module.exports = { globalRooms, globalUsers, globalFiles}
+const warnLimit = 10;
+
+module.exports = { globalRooms, globalUsers, globalFiles, globalWarns, warnLimit};
