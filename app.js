@@ -36,20 +36,6 @@ function checkParams(requiredParams) {
   };
 }
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/files', express.static(path.join(__dirname, 'files')));
-
-// Check black listed ip
-app.use((req, res, next) => {
-  if (checkWarn(req.ip)) {
-    next();
-  } else {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-})
 // Simplified logging middleware (debugging)
 app.use((req, res, next) => {
   if (req.url !== "/update/room") {
@@ -62,6 +48,12 @@ app.use((req, res, next) => {
   writeLog(req);
   next();
 });
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
+
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/files', express.static(path.join(__dirname, 'files')));
 
 app.get('/get/rooms', (req, res) => {
   res.status(200).json(globalRooms);
@@ -233,6 +225,16 @@ app.get('/.env', (req, res) => {
     black_list(req.ip);
 })
 
+// Check black listed ip
+app.use((req, res, next) => {
+  // TODO: CHECK FONCTION NOT EXIST BEFORE WARN
+  if (checkWarn(req.ip)) {
+    next();
+  } else {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+})
+
 // Handle 404
 app.use((req, res, next) => {
   warnClient(req.ip);
@@ -245,6 +247,8 @@ app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send(`Error occurred!`);
 });
+
+
 
 // Startup
 app.listen(port, () => {

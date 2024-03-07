@@ -92,31 +92,40 @@ function fetchRoomTimecode() {
 
 // Fetch subtitles .srt or .ass
 async function fetchSubtitleFiles(selectedFile) {
+  const basename = (givenFile) => givenFile.split('/').pop();
   const response = await fetch('/get/files');
   const files = await response.json();
-  // Filtrer les fichiers pour ne garder que les sous-titres .srt ou .ass avec le même nom de fichier que celui sélectionné
-  const subtitleFiles = files.filter(file => {
-    const fileNameWithoutExtension = selectedFile.split('.').slice(0, -1).join('.');
-    const fileExtension = file.split('.').pop();
-    return (fileExtension === 'srt' || fileExtension === 'ass') && file.startsWith(fileNameWithoutExtension);
+  let subtitleFiles = [];
+
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      for (let file of files) {
+        const fileNameWithoutExtension = basename(file).split('.').slice(0, -1).join('.');
+        const fileExtension = basename(file).split('.').pop();
+        if ((fileExtension === 'srt' || fileExtension === 'ass') && file.startsWith(basename(fileNameWithoutExtension))) {
+          subtitleFiles.push(file);
+        }
+      }
+      resolve(subtitleFiles);
+    }, 100);
   });
-  console.log("Subtitle files", subtitleFiles);
-  return subtitleFiles;
 }
 
 async function updateSubtitleSelect(selectedSubtitle) {
-  if (videoSource.textTracks.length > 0) {
-    videoSource.textTracks[0].mode = 'hidden'; // Masquer la piste de sous-titres actuelle
+  // Remove all existing track elements
+  for (let i = 0; i < videoSource.textTracks.length; i++) {
+    videoSource.textTracks[i].remove();
   }
   const track = document.createElement('track');
-  track.src = `./files/${selectedSubtitle}`;
+  track.src = `/files/${selectedSubtitle}`;
   track.kind = 'subtitles';
-  track.srclang = 'fr'; // Langue des sous-titres (remplacez par la langue appropriée si nécessaire)
-  track.label = 'French'; // Libellé des sous-titres (remplacez par le libellé approprié si nécessaire)
-  videoSource.appendChild(track); // Ajouter la nouvelle piste de sous-titres
-  track.addEventListener('load', () => {
-    videoSource.textTracks[0].mode = 'showing'; // Afficher la nouvelle piste de sous-titres
-  });
+  track.srclang = 'fr'; // Subtitle language
+  track.label = 'French'; // Subtitle label
+  track.default = true;
+  videoSource.appendChild(track); // Add new track
+  videoSource.textTracks[0].mode = 'showing';
+  videoSource.load();
+  videoSource.play();
 }
 
 
@@ -267,19 +276,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
       utils.setCookie('user', JSON.stringify(localUser), 1);
       roomName.innerHTML = localRoom.name
-      videoSource.src = localRoom.fileUrl
+
+      // add src element
+      let newSrc = document.createElement('source');
+      newSrc.src = localRoom.fileUrl
+      // Set type to video type with extention
+      let mimeType = utils.getMimeType(localRoom.fileUrl);
+      newSrc.type = mimeType;
+      videoSource.appendChild(newSrc)
       const subtitleSelect = document.getElementById('subtitle-select');
       subtitleSelect.innerHTML = "";
-      let fileSubtitles = fetchSubtitleFiles(localRoom.fileUrl);
-      for (let subtitle in fileSubtitles) {
-        subtitle = fileSubtitles[subtitle];
-        subtitleSelect.innerHTML += `<option value="${subtitle}">${subtitle}</option>`
-      }
-      // Add event listener to select subtitle file
-      subtitleSelect.addEventListener('change', async () => {
-        const selectedFile = subtitleSelect.value;
-        updateSubtitleSelect(selectedFile);
-      });
+      fetchSubtitleFiles(localRoom.fileUrl)
+        .then((fileSubtitles) => {
+          console.log("Subtitle files", fileSubtitles);
+          if (fileSubtitles) {
+            // Supprime les autres fichiers de sous-titre de la vidéo
+            subtitleSelect.innerHTML += `<option value="None"> </option>`
+            for (let subtitle in fileSubtitles) {
+              subtitle = fileSubtitles[subtitle];
+              subtitleSelect.innerHTML += `<option value="${subtitle}">${subtitle}</option>`
+              console.log("Subtitle", subtitle);
+            }
+            // Add event listener to select subtitle file
+            subtitleSelect.addEventListener('change', async () => {
+              const selectedFile = subtitleSelect.value;
+              updateSubtitleSelect(selectedFile);
+            });
+          } else {
+            subtitleSelect.outerHTML = "";
+          }
+        })
+
+      
 
       videoSource.load(); 
       if (!MediaSource.isTypeSupported(mimeCodec)) {

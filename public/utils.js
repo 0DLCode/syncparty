@@ -109,6 +109,20 @@ function webJsonDecode(event) {
   return msgBody;
 }
 
+function getMimeType(fileName) {
+  const fileExtension = fileName.split('.').pop();
+  const videoTypesByExtension = {
+    mp4: 'video/mp4',
+    webm: 'video/webm',
+    mpeg: 'video/mpeg',
+    mkv: 'video/mkv',
+    mov: 'video/quicktime',
+    avi: 'video/x-msvideo',
+  };
+
+  const videoType = videoTypesByExtension[fileExtension];
+  return videoType || 'video/mp4';
+}
 
 
-export { createUser, getRooms, getFiles, setCookie, checkUserCookie }
+export { createUser, getRooms, getFiles, setCookie, checkUserCookie, webJsonDecode, getMimeType }
