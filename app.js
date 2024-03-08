@@ -38,14 +38,16 @@ function checkParams(requiredParams) {
 
 // Simplified logging middleware (debugging)
 app.use((req, res, next) => {
-  if (req.url !== "/update/room") {
+  if (req.url !== "/update/room" && checkWarn(req.ip)) {
     console.log(`${moment().format('YYYY-MM-DD HH:mm:ss')} [${req.ip.replace('::ffff:', '')}] => ${req.method} ${req.url}`);
   }
   next();
 });
 // Write log
 app.use((req, res, next) => {
-  writeLog(req);
+  if (checkWarn(req.ip)) {
+    writeLog(req);
+  }
   next();
 });
 
