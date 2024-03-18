@@ -4,6 +4,8 @@ let globalRooms = {};
 let globalFiles = [];
 let localUser = {};
 
+let mediasExt = ["mp4", "webm", "mkv", "mov", "avi", "mp3", "wav", "ogg", "flac"];
+
 const cookie = document.cookie;
 const formUsername = document.getElementById('username');
 const roomForm = document.getElementById('roomForm');
@@ -59,7 +61,7 @@ function showFiles() {
   fileList.innerHTML = '';
   for (let file in globalFiles) {
     file = globalFiles[file]; // get file
-
+    if (!mediasExt.includes(file.split('.').pop())) continue;
     let fileElement = document.createElement('li');
     fileElement.id = 'file-element';
     fileElement.innerHTML = `<h3>${file.split("/").pop()}</h3>`;

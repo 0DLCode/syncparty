@@ -264,10 +264,6 @@ function updateGlobalFiles() {
       console.error('Error while reading files', err);
       return;
     }
-    for (let file of files) {
-      if (!globalFiles.includes(file)) {
-        globalFiles.push(file);
-      }
-    }
+    globalFiles.splice(0, globalFiles.length, ...files);
   });
 }
