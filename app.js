@@ -264,6 +264,10 @@ function updateGlobalFiles() {
       console.error('Error while reading files', err);
       return;
     }
-    globalFiles = files;
-  });i
+    for (let file of files) {
+      if (!globalFiles.includes(file)) {
+        globalFiles.push(file);
+      }
+    }
+  });
 }

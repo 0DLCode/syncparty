@@ -6,7 +6,7 @@ function initWebSocket(port) {
   const wss = new WebSocket.Server({ port });
 
   wss.on('connection', function connection(ws, req) {
-    console.log(`Client connected: [${req.socket.remoteAddress}:${req.socket.remotePort}] on ${port}`);
+    console.log(`ROOM PAGE\\\\ Client connected: [${req.socket.remoteAddress}:${req.socket.remotePort}] on ${port}`);
     
     // On message received
     ws.on('message', async function incoming(event) {
@@ -81,7 +81,7 @@ function initWebSocket(port) {
 function initRoomWebSocket(port) {
   const wss = new WebSocket.Server({ port });
   wss.on('connection', function connection(ws, req) {
-      console.log(`Client connected: [${req.socket.remoteAddress}:${req.socket.remotePort}] on ${port}`);
+      console.log(`ROOM PAGE - HOST\\\\ Client connected: [${req.socket.remoteAddress}:${req.socket.remotePort}] on ${port}`);
       
       // On message received
       ws.on('message', function incoming(event) {
@@ -102,16 +102,16 @@ function initRoomWebSocket(port) {
 function initIndexWebSocket(port) {
   const wss = new WebSocket.Server({ port });
   wss.on('connection', function connection(ws, req) {
-    console.log(`Client connected: [${req.socket.remoteAddress}:${req.socket.remotePort}] on ${port}`);
+    console.log(`INDEX PAGE\\\\ Client connected: [${req.socket.remoteAddress}:${req.socket.remotePort}] on ${port}`);
 
     ws.on('message', function incoming(event) {
       let msgBody = webJsonDecode(event);
       if (msgBody.action === "getRooms") {
         ws.send(JSON.stringify({rooms: globalRooms}));
-        console.log("Get rooms", globalRooms);
+        //console.log("Get rooms", globalRooms);
       } else if (msgBody.action === "getFiles") {
         ws.send(JSON.stringify({files: globalFiles}));
-        console.log("Get files", globalFiles);
+        //console.log("Get files", globalFiles);
       } else {
         ws.send(JSON.stringify({error: "Unknown action"}));
         console.log("Unknown action");
