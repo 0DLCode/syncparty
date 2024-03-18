@@ -1,4 +1,4 @@
-import { createUser, getRooms, getFiles, setCookie, checkUserCookie } from '/utils.js';
+import { createUser, getRooms, getFiles, setCookie, checkUserCookie, webJsonDecode} from '/utils.js';
 
 let globalRooms = {};
 let globalFiles = [];
@@ -71,7 +71,6 @@ function showFiles() {
 }
 
 function reload() {
-  console.log("Reloading...")
   Promise.all([getFiles(), getRooms()])
     .then(([files, rooms]) => {
       globalFiles = files;
@@ -121,4 +120,34 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   reload();
+
+  // WebSocket
+  const socket = new WebSocket(`ws://${window.location.hostname}:2290/`);
+
+  socket.onopen = function() {
+    console.log('Connection WebSocket active');
+  };
+
+  socket.onmessage = function(event) {
+    let decodedMessage = webJsonDecode(event);
+    if (decodedMessage.error) {
+      console.error('WEBSOCKET Error:', decodedMessage.error);
+    } else if (decodedMessage.rooms) {
+      globalRooms = decodedMessage.rooms;
+      showRooms();
+    } else if (decodedMessage.files) {
+      globalFiles = decodedMessage.files;
+      showFiles();
+    }
+  }
+
+  socket.onerror = function(error) {
+    console.error('WebSocket Error:', error);
+  };
+
+  // start loop
+  setInterval(() => {
+    socket.send(JSON.stringify({action: "getRooms"}));
+    socket.send(JSON.stringify({action: "getFiles"}));
+  }, 1000);
 })

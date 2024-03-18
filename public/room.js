@@ -144,18 +144,6 @@ function showUsers(room) {
   }
 }
 
-function webJsonDecode(event) {
-  let msgBody;
-  try {
-    msgBody = JSON.parse(event.data.toString("utf-8"));
-  } catch (e) {
-    console.error('Error decoding message:', e);
-    return null;
-  }
-  // console.log('Decoded message:', msgBody);
-  return msgBody;
-}
-
 function webUpdateRoom(socket) {
   socket.send(JSON.stringify({ action: "updateRoom", user: localUser, roomId: roomId,
     timecode: videoSource.currentTime, timestamp: new Date().getTime(), pause: hostPaused , noLog: true}));
@@ -175,7 +163,7 @@ function nextRoomTimecode() {
     };
 
     socket.onmessage = function(event) {
-      let decodedMessage = webJsonDecode(event);
+      let decodedMessage = utils.webJsonDecode(event);
       if (decodedMessage.error) {
         console.error('WEBSOCKET Error:', decodedMessage.error);
         reject(decodedMessage.error);
@@ -337,7 +325,7 @@ document.addEventListener('DOMContentLoaded', () => {
           showUsers(localRoom);
         }
         clientSocket.onmessage = function(event) {
-          let decodedMessage = webJsonDecode(event);
+          let decodedMessage = utils.webJsonDecode(event);
           if (decodedMessage.error) {
             console.error('WEBSOCKET Error:', decodedMessage.error);
             if (decodedMessage.error == "Room not found") {
@@ -388,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }, 10)
         }
         clientSocket.onmessage = function(event) {
-          let decodedMessage = webJsonDecode(event);
+          let decodedMessage = utils.webJsonDecode(event);
           if (decodedMessage.error) {
             console.error('WEBSOCKET Error:', decodedMessage.error);
             if (decodedMessage.error == "Room not found") {

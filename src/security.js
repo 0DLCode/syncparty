@@ -19,7 +19,7 @@ function writeLog(req) {
       console.error('Error while logging', err);
       return;
     } else {
-      if (req.body) {
+      if ( (req.method === 'POST' || req.method === 'PUT') && req.body !== undefined) {
         fs.appendFile(logPath, `==> ${JSON.stringify(req.body)}\n`, (err) => {
           if (err) {
             console.error('Error while logging', err);

@@ -6,13 +6,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 let { globalRooms, globalUsers, globalFiles, globalWarns, warnLimit } = require('./src/globals.js');
-const { initWebSocket, initRoomWebSocket } = require('./src/webSocketManager.js');
+const { initIndexWebSocket, initWebSocket, initRoomWebSocket } = require('./src/webSocketManager.js');
 const { writeLog, black_list, warnClient, checkWarn } = require('./src/security.js');
 
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 2305;
 
+initIndexWebSocket(2290);
 initWebSocket(2300);
 initRoomWebSocket(2310);
 
@@ -251,7 +252,6 @@ app.use((err, req, res, next) => {
 });
 
 
-
 // Startup
 app.listen(port, () => {
   console.log(`App running at http://localhost:${port}`);
@@ -265,5 +265,5 @@ function updateGlobalFiles() {
       return;
     }
     globalFiles = files;
-  });
+  });i
 }
