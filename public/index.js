@@ -12,6 +12,36 @@ const roomForm = document.getElementById('roomForm');
 const fileUrl = document.getElementById('filename');
 const roomButton = document.getElementById('room-submit');
 const userInfo = document.getElementById('userInfo');
+const fileInput = document.getElementById('fileInput');
+const btnFileInput = document.getElementById('file-upload-btn');
+
+async function uploadFile() {
+  const file = fileInput.files[0];
+  if (!file) {
+      console.log("No file selected");
+      return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+      console.log("Uploading file", file);
+      const response = await fetch('/upload', {
+          method: 'POST',
+          body: formData
+      });
+
+      if (response.ok) {
+          console.log('File uploaded successfully');
+          fileInput.value = '';
+      } else {
+          throw new Error('Error uploading file. Status code: ' + response.status);
+      }
+  } catch (error) {
+      alert('Error uploading file: ' + error.message);
+  }
+}
 
 
 
@@ -122,6 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   reload();
+  btnFileInput.addEventListener('click', uploadFile);
+
 
   // WebSocket
   const socket = new WebSocket(`ws://${window.location.hostname}:2290/`);

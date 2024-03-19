@@ -154,6 +154,37 @@ video {
 input#user-latence {
   width: 300px;
 }
+/* Style de base pour l'élément input */
+/* Style personnalisé pour l'input de type file */
+#fileInput {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+} #fileInput:hover {
+  background-color: #0056b3;
+}
+
+/* Style personnalisé pour le bouton de téléversement */
+button#file-upload-btn {
+  display: inline-block;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button#file-upload-btn:hover {
+  background-color: #0056b3;
+}
+
 
 /* Styliser l'élément select */
 select#subtitle-select {

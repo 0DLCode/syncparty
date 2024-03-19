@@ -2,6 +2,7 @@ const fs = require("fs")
 const path = require('path');
 const WebSocket = require('ws');
 const moment = require('moment');
+const multer = require('multer');
 const express = require('express');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
@@ -12,6 +13,31 @@ const { writeLog, black_list, warnClient, checkWarn, getIpAddress } = require('.
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 2305;
+
+// Multer upload configuration
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'files/') // Chemin où les fichiers téléversés seront stockés
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.originalname)
+  }
+})
+const fileFilter = (req, file, cb) => {
+  // Checking extension
+  if (!file.originalname.match(/\.(webm|avi|mp4|mkv|mp3|wav|ogg|flac)$/)) {
+    return cb(new Error('Seuls les fichiers image sont autorisés.'));
+  }
+  // Checking size
+  if (file.size > 1024 * 1024 * 1000) { // 1go max
+    return cb(new Error('La taille du fichier ne doit pas dépasser 1 Go.'));
+  }
+  cb(null, true); // Autoriser le téléversement si les conditions sont remplies
+}
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter
+});
 
 initIndexWebSocket(2290);
 initWebSocket(2300);
@@ -60,6 +86,10 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/files', express.static(path.join(__dirname, 'files')));
+
+app.post('/upload', upload.single('file'), (req, res) => {
+  res.sendStatus(200); // Répondre avec un statut 200 si le téléversement est réussi
+});
 
 app.get('/get/rooms', (req, res) => {
   res.status(200).json(globalRooms);
