@@ -7,7 +7,7 @@ const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 let { globalRooms, globalUsers, globalFiles, globalWarns, warnLimit } = require('./src/globals.js');
 const { initIndexWebSocket, initWebSocket, initRoomWebSocket } = require('./src/webSocketManager.js');
-const { writeLog, black_list, warnClient, checkWarn } = require('./src/security.js');
+const { writeLog, black_list, warnClient, checkWarn, getIpAddress } = require('./src/security.js');
 
 require('dotenv').config();
 const app = express();
@@ -40,7 +40,10 @@ function checkParams(requiredParams) {
 // Simplified logging middleware (debugging)
 app.use((req, res, next) => {
   if (req.url !== "/update/room" && checkWarn(req.ip)) {
-    console.log(`${moment().format('YYYY-MM-DD HH:mm:ss')} [${req.ip.replace('::ffff:', '')}] => ${req.method} ${req.url}`);
+    let ip=req.ip.replace('::ffff:', '');
+    let realIp = getIpAddress(req).replace('::ffff:', '');
+    let ipLog =  (realIp == ip) ? ip : `${realIp} via ${ip}`;
+    console.log(`${moment().format('YYYY-MM-DD HH:mm:ss')} [${ipLog}]=> ${req.method} ${req.url}`);
   }
   next();
 });
@@ -71,9 +74,10 @@ app.post('/get/room', checkParams(['roomId']),(req, res) => {
     res.status(404).json({error: 'Room not found'});
   }
 })
-app.get('/get/users', (req, res) => {
-  res.status(200).json(globalUsers);
-})
+
+// app.get('/get/users', (req, res) => {
+//   res.status(200).json(globalUsers);
+// })
 app.post('/get/user', checkParams(['userId']),(req, res) => {
   const formData = req.body;
   let userId = formData.userId;

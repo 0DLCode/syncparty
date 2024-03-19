@@ -11,10 +11,12 @@ let blackList = [];
 
 function writeLog(req) {
   let ip=req.ip.replace('::ffff:', '');
+  let realIp = getIpAddress(req).replace('::ffff:', '');
+  let ipLog = `${realIp} via ${ip}` ? realIp == ip : ip;
   if (!fs.existsSync(logPath)) {
     fs.writeFileSync(logPath, '');
   }
-  fs.appendFile(logPath, `${moment().format('YYYY-MM-DD HH:mm:ss')} [${ip}] => ${req.method} ${req.url}\n`.toString(), (err) => {
+  fs.appendFile(logPath, `${moment().format('YYYY-MM-DD HH:mm:ss')} [${ipLog}] => ${req.method} ${req.url}\n`.toString(), (err) => {
     if (err) {
       console.error('Error while logging', err);
       return;
@@ -80,4 +82,12 @@ function checkWarn(ip) {
   }
 }
 
-module.exports = { black_list, writeLog, warnClient, checkWarn };
+function getIpAddress(req) {
+  const forwardedIpsStr = req.header('x-forwarded-for');
+  const forwardedIps = forwardedIpsStr ? forwardedIpsStr.split(',') : [];
+  const ipAddress = forwardedIps[0] || req.connection.remoteAddress;
+  
+  return ipAddress;
+}
+
+module.exports = { black_list, writeLog, warnClient, checkWarn, getIpAddress };

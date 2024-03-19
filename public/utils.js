@@ -124,5 +124,12 @@ function getMimeType(fileName) {
   return videoType || 'video/mp4';
 }
 
+function getIpAddress(req) {
+  const forwardedIpsStr = req.header('x-forwarded-for');
+  const forwardedIps = forwardedIpsStr ? forwardedIpsStr.split(',') : [];
+  const ipAddress = forwardedIps[0] || req.connection.remoteAddress;
+  
+  return ipAddress;
+}
 
 export { createUser, getRooms, getFiles, setCookie, checkUserCookie, webJsonDecode, getMimeType }
