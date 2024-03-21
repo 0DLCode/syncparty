@@ -15,7 +15,7 @@ const userInfo = document.getElementById('userInfo');
 const fileInput = document.getElementById('fileInput');
 const btnFileInput = document.getElementById('file-upload-btn');
 
-async function uploadFile() {
+function uploadFile() {
   const file = fileInput.files[0];
   if (!file) {
       console.log("No file selected");
@@ -25,22 +25,28 @@ async function uploadFile() {
   const formData = new FormData();
   formData.append('file', file);
 
-  try {
-      console.log("Uploading file", file);
-      const response = await fetch('/upload', {
-          method: 'POST',
-          body: formData
-      });
-
-      if (response.ok) {
-          console.log('File uploaded successfully');
+  const xhr = new XMLHttpRequest();
+  const totalSize = file.size;
+  let uploaded = 0;
+  console.log(`Uploading file ${file.name} (${Math.round(totalSize/1024/1024)} Mo)`);
+  xhr.open('POST', '/upload', true);
+  xhr.onload = function() {
+      if (xhr.status === 200) {
+          console.log(`File ${file.name} uploaded successfully (${Math.round(uploaded/1024/1024)} Mo)`);
           fileInput.value = '';
       } else {
-          throw new Error('Error uploading file. Status code: ' + response.status);
+          alert(`Error uploading file. Status code: ${xhr.status}`);
       }
-  } catch (error) {
-      alert('Error uploading file: ' + error.message);
-  }
+  };
+  xhr.upload.addEventListener('progress', (event) => {
+      const loaded = event.loaded;
+      const percent = (loaded / totalSize * 100).toFixed(2);
+      const uploadedSize = Math.round((loaded / 1024 / 1024) * 100) / 100;
+      const totalSizeMo = Math.round(totalSize / 1024 / 1024 * 100) / 100;
+      console.log(`Upload progress: ${percent}%. Uploaded ${uploadedSize} Mo sur ${totalSizeMo} Mo`);
+      uploaded = event.loaded;
+  }, false);
+  xhr.send(formData);
 }
 
 
