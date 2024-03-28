@@ -1,0 +1,258 @@
+[33mcommit 070a89de246161749e2dcffeb853c99fb0b6c661[m[33m ([m[1;36mHEAD -> [m[1;32mmaster[m[33m)[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Thu Mar 28 23:26:23 2024 +0100
+
+    rebuild of websocket
+
+[33mcommit 24bd7b206db0cce57a148e2151752f10e61bceba[m[33m ([m[1;31morigin/master[m[33m)[m
+Author: daisseur <100715068+daisseur@users.noreply.github.com>
+Date:   Thu Mar 21 22:17:51 2024 +0100
+
+    Delete ssl directory
+
+[33mcommit 8a0c51804e621b3c2c27604f6b5921a58d89653a[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Thu Mar 21 22:16:20 2024 +0100
+
+    simple upload logging
+
+[33mcommit 23ba89a6bb776aeca9d5f6e38cd84b084a49baf0[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Tue Mar 19 16:26:12 2024 +0100
+
+    upload file v1
+
+[33mcommit 081010b4643349484fc5897b2eb7c36c948553e8[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Tue Mar 19 15:33:02 2024 +0100
+
+    x-forwarded support
+
+[33mcommit 36c61a3022e6c1d5f19b4345b6da1301d81122cc[m
+Author: daisseur <100715068+daisseur@users.noreply.github.com>
+Date:   Mon Mar 18 22:41:02 2024 +0100
+
+    Delete node_modules directory
+
+[33mcommit 991f0d5897b01c63f7f8707f2bedae65746eaa73[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Mon Mar 18 22:35:35 2024 +0100
+
+    update auto files update
+
+[33mcommit 94e1fd33324dd8eba9dbb57bd07a3444510a9ceb[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Mon Mar 18 22:11:46 2024 +0100
+
+    auto rooms & file update; remove module from git
+
+[33mcommit ded45f89800f18ed56da5ea95a4a08d3187f8c0d[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Mon Mar 18 21:59:46 2024 +0100
+
+    ignore module dir
+
+[33mcommit 6394a27622f17d4fa14c577c2d7d21bb00ed83f8[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Fri Mar 8 22:28:17 2024 +0100
+
+    WarnFix &
+
+[33mcommit 31563519124a3def73925c8a3a43d989bb394f04[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Thu Mar 7 21:44:16 2024 +0100
+
+    subtitle support  try2
+
+[33mcommit 49ea452b9e8439a46dcb3f0e35052ede1030f000[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Wed Mar 6 22:20:34 2024 +0100
+
+    security & subtitles
+
+[33mcommit bc6bfb2f9d3e5cd745e4e366261b7c84efe27687[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Sun Mar 3 15:05:33 2024 +0100
+
+    add favicon
+
+[33mcommit 0146fe4bef78ecf3cfac6ea6673a7177caf9c97d[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Thu Feb 29 21:47:58 2024 +0100
+
+    sync follow room hosted
+
+[33mcommit 6d14660571dd617c08911bc7240fcf94e70b51da[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Thu Feb 29 12:18:01 2024 +0100
+
+    minor fix
+
+[33mcommit 1cfc3bb55cae740a4a118df0c06e3e1ba0c91c3c[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Wed Feb 21 23:02:02 2024 +0100
+
+    implement dotenv
+
+[33mcommit 315d67c53c2fe662533c879db25e14b3cfeb1ecd[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Wed Feb 21 22:06:18 2024 +0100
+
+    alpha2.6.1
+
+[33mcommit 5f3bbeee4ae2ed93af650cc14679a22c401c5863[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Wed Feb 21 16:07:49 2024 +0100
+
+    minor fix
+
+[33mcommit 8ce0451b0630fa205c316388423fd828e86b366a[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Wed Feb 21 16:04:06 2024 +0100
+
+    alpha2.6.0
+
+[33mcommit 5598079fa7d3e99c1f928410c92447e369a6d5f2[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Wed Feb 21 12:08:20 2024 +0100
+
+    update alpha2.5
+
+[33mcommit 4c632190bf19f90c9d1aeeecea288ef59a7a0ca1[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Wed Feb 21 10:56:27 2024 +0100
+
+    alpha2.5 security update
+
+[33mcommit ac4e39af073dfb25160d62094787c6a06a5a98ec[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Sun Feb 18 23:07:08 2024 +0100
+
+    minor fix
+
+[33mcommit c18fe428b4094d0f48a7b4d567ec36bbfd62178f[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Sun Feb 18 23:06:05 2024 +0100
+
+    minor fix
+
+[33mcommit d9985b264e05e80e1a7077f07130a30ee3b79610[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Sun Feb 18 14:19:16 2024 +0100
+
+    alpha2.1
+
+[33mcommit 9d87b8e30ead42ecdafc800224eb8b0bc66210f7[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Sat Feb 17 17:56:01 2024 +0100
+
+    minor fix
+
+[33mcommit d27a7794dd62137f2ee1f954e67901b6fd26dae3[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Sat Feb 17 17:50:07 2024 +0100
+
+    minor fix
+
+[33mcommit ab8125b458298fb4307d0e00f501aa456ede1034[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Sat Feb 17 17:48:48 2024 +0100
+
+    minor fix
+
+[33mcommit ae7bfda0286fa32f5ea8d03d5066aa66b1d6da60[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Sat Feb 17 17:46:48 2024 +0100
+
+    minor fix
+
+[33mcommit 9ff2ca47060d9703fc860973bc5df1771ca5c541[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Sat Feb 17 17:42:31 2024 +0100
+
+    minor fix
+
+[33mcommit 2dc7fdbbf409453fa9f9303ae6d99236fbaa88ba[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Sat Feb 17 17:35:58 2024 +0100
+
+    minor fix
+
+[33mcommit 09026f1e689560714a8ad5dab2482a08eca8fba4[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Sat Feb 17 16:57:34 2024 +0100
+
+    alpha2
+
+[33mcommit a5378934575e4ee6c0300fe9bbd9e1798cc984fd[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Sat Feb 17 01:28:46 2024 +0100
+
+    fix placeholder
+
+[33mcommit e9ac54875011c8e60921ccd05aefbcf361145d79[m
+Merge: f628466 e7f27f5
+Author: daisseur <100715068+daisseur@users.noreply.github.com>
+Date:   Sat Feb 17 01:25:31 2024 +0100
+
+    Merge pull request #5 from 0DLCode/alpha
+    
+    alpha1.1
+
+[33mcommit e7f27f5325508afab271e46b1f9cdc940f06744a[m[33m ([m[1;31morigin/alpha[m[33m)[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Sat Feb 17 01:22:22 2024 +0100
+
+    alpha1.1
+
+[33mcommit f628466e1818ef522b28fe02df475f4a08a151ec[m
+Merge: 7b733c6 8589a92
+Author: daisseur <100715068+daisseur@users.noreply.github.com>
+Date:   Fri Feb 16 16:54:54 2024 +0100
+
+    Merge pull request #4 from 0DLCode/alpha
+    
+    update: ALPHA-01
+
+[33mcommit 8589a921da0166e1fb1ad5bef3e4f54362fcf9df[m
+Merge: b389225 7b733c6
+Author: daisseur <100715068+daisseur@users.noreply.github.com>
+Date:   Fri Feb 16 16:54:47 2024 +0100
+
+    Merge branch 'master' into alpha
+
+[33mcommit b3892253f275eb8c694c862fc0c7f4f8b1a628ae[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Fri Feb 16 16:47:10 2024 +0100
+
+    update: ALPHA-01
+
+[33mcommit 7b733c604a2d28d116100b54c4b2b7a2cc88b542[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Fri Feb 16 02:44:34 2024 +0100
+
+    update beta1 v.2
+
+[33mcommit 91b1717d9a88a6361567eee818b09995b4484504[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Fri Feb 16 02:36:35 2024 +0100
+
+    update beta1
+
+[33mcommit adc0e34aed7bf844a40cf066d200a158b9daf3d8[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Thu Feb 15 13:18:01 2024 +0100
+
+    update V2
+
+[33mcommit f2a4f40fc0669a9ea7e4a5a0e3d6c91b4af7e105[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Thu Feb 15 00:23:15 2024 +0100
+
+    update: fix-V1
+
+[33mcommit 446c156a1f3d470a63cc7bff239b4f688feedebf[m
+Author: daisseur <daisseur@gmail.com>
+Date:   Wed Feb 14 17:19:58 2024 +0100
+
+    first commit

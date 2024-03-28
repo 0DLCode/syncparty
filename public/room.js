@@ -1,19 +1,18 @@
-import * as utils from '/utils.js';
+import * as utils from './utils.js';
 const urlParams = new URLSearchParams(window.location.search);
 const roomId = urlParams.get('id');
 let userId = urlParams.get('userId');
 
-const roomName = document.getElementById("room-name");
+const roomName = document.getElementById('room-name');
 const formUsername = document.getElementById('username');
 const formButton = document.getElementById('form-button');
-const userForm = document.getElementById("userForm");
+const userForm = document.getElementById('userForm');
 const videoSource = document.getElementById('video-source');
 const listUsersElement = document.getElementById('list-users');
 const mimeCodec = 'video/mp4; codecs="avc1.42E01E"';
 
 let localUser;
 let localRoom;
-let roomUsers = {};
 
 let latence = 0.285;
 const userLatence = document.getElementById('user-latence');
@@ -23,86 +22,94 @@ console.log(window.location.origin);
 
 let STOP = false;
 let hostPaused = true;
-let IsRoomDeleted = false;
 
 // Get the room by id
-async function fetchRoom() {
-  return fetch(`/get/room`, {
+async function fetchRoom () {
+  return fetch('/get/room', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ roomId: roomId })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roomId })
   })
-  .then(response => response.json())
-  .then(data => {
-    return data
-  })
-  .catch(error => {
-    console.error('Error fetching data:', error);
-  });
+    .then((response) => response.json())
+    .then((data) => {
+      return data;
+    })
+    .catch((error) => {
+      console.error('Error fetching data:', error);
+    });
 }
 
-function webFetchRoom(socket) {
-  socket.send(JSON.stringify({ action: "getRoom", roomId: roomId, noLog: true }));
+function webFetchRoom (socket) {
+  socket.send(
+    JSON.stringify({ action: 'getRoom', roomId, noLog: true })
+  );
 }
 
 // Get user by id
-async function fetchUser() {
-  return fetch(`/get/user`, {
+async function fetchUser () {
+  return fetch('/get/user', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ userId: userId })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ userId })
   })
-  .then(response => response.json())
-  .then(data => {
-    return data
-  })
-  .catch(error => {
-    console.error('Error fetching data:', error);
+    .then((response) => response.json())
+    .then((data) => {
+      return data;
+    })
+    .catch((error) => {
+      console.error('Error fetching data:', error);
+    });
+}
+
+function fetchAll () {
+  console.log('Fetching all...');
+  return Promise.all([fetchRoom(), fetchUser()]).then(([room, user]) => {
+    localRoom = room;
+    console.log('Check room', localRoom);
+    localUser = user;
+    console.log('Check user', localUser);
+    return room, user;
   });
 }
 
-function fetchAll() {
-  console.log("Fetching all...");
-  return Promise.all([fetchRoom(), fetchUser()])
-  .then(([room, user]) => {
-    localRoom = room
-    console.log("Check room", localRoom);
-    localUser = user
-    console.log("Check user", localUser);
-    return room, user
-  })  
-}
-
-function fetchRoomTimecode() {
-  return fetch(`/room/timecode`, {
+function fetchRoomTimecode () {
+  return fetch('/room/timecode', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ roomId: roomId, timestamp: new Date().getTime() })
-  }).then((response) => {
-    response = response.json();
-    if (response) {
-      return response
-    } else {
-      throw new Error('Failed to fetch timecode ')
-    }
-  }).catch((err) => {
-    console.error(err)
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roomId, timestamp: new Date().getTime() })
   })
+    .then((response) => {
+      response = response.json();
+      if (response) {
+        return response;
+      } else {
+        throw new Error('Failed to fetch timecode ');
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 }
 
 // Fetch subtitles .srt or .ass
-async function fetchSubtitleFiles(selectedFile) {
+async function fetchSubtitleFiles (selectedFile) {
   const basename = (givenFile) => givenFile.split('/').pop();
   const response = await fetch('/get/files');
   const files = await response.json();
-  let subtitleFiles = [];
+  const subtitleFiles = [];
 
   return new Promise((resolve) => {
     setTimeout(() => {
-      for (let file of files) {
-        const fileNameWithoutExtension = basename(file).split('.').slice(0, -1).join('.');
+      for (const file of files) {
+        const fileNameWithoutExtension = basename(file)
+          .split('.')
+          .slice(0, -1)
+          .join('.');
         const fileExtension = basename(file).split('.').pop();
-        if ((fileExtension === 'srt' || fileExtension === 'ass') && file.startsWith(basename(fileNameWithoutExtension))) {
+        if (
+          (fileExtension === 'srt' || fileExtension === 'ass') &&
+          file.startsWith(basename(fileNameWithoutExtension))
+        ) {
           subtitleFiles.push(file);
         }
       }
@@ -111,7 +118,7 @@ async function fetchSubtitleFiles(selectedFile) {
   });
 }
 
-async function updateSubtitleSelect(selectedSubtitle) {
+async function updateSubtitleSelect (selectedSubtitle) {
   // Remove all existing track elements
   for (let i = 0; i < videoSource.textTracks.length; i++) {
     videoSource.textTracks[i].remove();
@@ -128,9 +135,8 @@ async function updateSubtitleSelect(selectedSubtitle) {
   videoSource.play();
 }
 
-
-function showUsers(room) {
-  listUsersElement.innerHTML = "";
+function showUsers (room) {
+  listUsersElement.innerHTML = '';
   for (let user in room.users) {
     user = room.users[user];
     if (user.uuid === room.host.uuid) {
@@ -138,32 +144,44 @@ function showUsers(room) {
     } else if (user.uuid === userId) {
       listUsersElement.innerHTML += `<li>${user.username}  <em>(You)</em></li>`;
     } else {
-      
-      listUsersElement.innerHTML += `<li>${user.username}</li>`; 
+      listUsersElement.innerHTML += `<li>${user.username}</li>`;
     }
   }
 }
 
-function webUpdateRoom(socket) {
-  socket.send(JSON.stringify({ action: "updateRoom", user: localUser, roomId: roomId,
-    timecode: videoSource.currentTime, timestamp: new Date().getTime(), pause: hostPaused , noLog: true}));
+function webUpdateRoom (socket) {
+  socket.send(
+    JSON.stringify({
+      action: 'updateRoom',
+      user: localUser,
+      roomId,
+      timecode: videoSource.currentTime,
+      timestamp: new Date().getTime(),
+      pause: hostPaused,
+      noLog: true
+    })
+  );
 }
 
-function nextRoomTimecode() {
+function nextRoomTimecode () {
   return new Promise((resolve, reject) => {
-    const socket = new WebSocket(`ws://${window.location.hostname}:2300/`);
+    const socket = new WebSocket(`ws://${window.location.host}/room/client`);
 
-    let message = { action: "nextTimecode", timecode: videoSource.currentTime, roomId: roomId, timestamp: new Date().getTime() };
-    console.log("Message:", message);
+    const message = {
+      action: 'nextTimecode',
+      timecode: videoSource.currentTime,
+      roomId,
+      timestamp: new Date().getTime()
+    };
+    console.log('Message:', message);
 
-    socket.onopen = function() {
+    socket.onopen = function () {
       socket.send(JSON.stringify(message));
       console.log('Connection WebSocket active');
-      
     };
 
-    socket.onmessage = function(event) {
-      let decodedMessage = utils.webJsonDecode(event);
+    socket.onmessage = function (event) {
+      const decodedMessage = utils.webJsonDecode(event);
       if (decodedMessage.error) {
         console.error('WEBSOCKET Error:', decodedMessage.error);
         reject(decodedMessage.error);
@@ -173,298 +191,314 @@ function nextRoomTimecode() {
       }
     };
 
-    socket.onerror = function(error) {
+    socket.onerror = function (error) {
       console.error('WebSocket Error:', error);
       reject(error);
     };
   }).catch((error) => {
     reject(error);
-});
+  });
 }
 
-function joinRoom() {
+function joinRoom () {
   // add user to room
-  fetch(`/room/join`, {
+  fetch('/room/join', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ roomId: roomId, user: localUser })
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error('Failed to join room ' + response.status)
-    }
-  }).catch((err) => {
-    console.error(err)
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ roomId, user: localUser })
   })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error('Failed to join room ' + response.status);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+    });
 }
 
-function nextRoom() {
-  fetch('/get/user', { 
-    method: 'POST', 
-    headers: {'Content-Type': 'application/json'},
+function nextRoom () {
+  fetch('/get/user', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId: localRoom.host.uuid })
-  }).then((response) => {
-    if (!response.ok) {
-      throw new Error('Failed to get user ' + response.status)
-    }
-    return response.json();
-  }).then((data) => {
-    let nextRoom = data.roomHosted;
-    window.location = encodeURI(`/room?id=${nextRoom}&userId=${localUser.uuid}`);
-  }).catch((err) => {
-    console.error(err)
-    //goHome();
   })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error('Failed to get user ' + response.status);
+      }
+      return response.json();
+    })
+    .then((data) => {
+      const nextRoom = data.roomHosted;
+      window.location = encodeURI(
+        `/room?id=${nextRoom}&userId=${localUser.uuid}`
+      );
+    })
+    .catch((err) => {
+      console.error(err);
+      // goHome();
+    });
 }
 
-function goHome() {
-  window.location.href = encodeURI(`/`)
+function goHome () {
+  window.location.href = encodeURI('/');
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  console.log("id", roomId)
-  console.log("user", userId)
+  console.log('id', roomId);
+  console.log('user', userId);
 
   // If the user token is not provided in the url
   if (!userId) {
-    let checkUser = utils.checkUserCookie();
-    if (checkUser) {  // If the user token is found in the cookie
-      //localUser = checkUser;
-      userId = checkUser.uuid
-
+    const checkUser = utils.checkUserCookie();
+    if (checkUser) {
+      // If the user token is found in the cookie
+      // localUser = checkUser;
+      userId = checkUser.uuid;
     } else {
-      videoSource.outerHTML = "";
-      roomName.innerHTML = "You have to create a user"
-      userLatence.outerHTML = "";
-      userLatenceLabel.outerHTML = "";
+      videoSource.outerHTML = '';
+      roomName.innerHTML = 'You have to create a user';
+      userLatence.outerHTML = '';
+      userLatenceLabel.outerHTML = '';
 
       // Waiting for the creation of a new user to reload the page
-      formButton.addEventListener('click', function(event) {
+      formButton.addEventListener('click', function (event) {
         event.preventDefault();
-        let newUser = Promise.resolve(createUser(formUsername.value.trim()));
+        const newUser = Promise.resolve(createUser(formUsername.value.trim()));
         localUser = newUser;
-        userId = localUser.uuid
+        userId = localUser.uuid;
         setCookie('user', JSON.stringify(localUser), 1);
-        console.log("Check user", localUser);
+        console.log('Check user', localUser);
         // Reload windo with user token
-        window.location = encodeURI(`/room?id=${roomId}&userId=${userId}`)
-      })
+        window.location = encodeURI(`/room?id=${roomId}&userId=${userId}`);
+      });
     }
   }
   // If the room id is not provided in the url
   if (!roomId) {
-    window.location.href = "/index.html";
-  } 
+    window.location.href = '/index.html';
+  }
 
   if (userId) {
-    userForm.outerHTML = "";
+    userForm.outerHTML = '';
     fetchAll().then(() => {
       if (localRoom === undefined) {
         goHome();
       }
 
       utils.setCookie('user', JSON.stringify(localUser), 1);
-      roomName.innerHTML = localRoom.name
+      roomName.innerHTML = localRoom.name;
 
       // add src element
-      let newSrc = document.createElement('source');
-      newSrc.src = localRoom.fileUrl
+      const newSrc = document.createElement('source');
+      newSrc.src = localRoom.fileUrl;
       // Set type to video type with extention
-      let mimeType = utils.getMimeType(localRoom.fileUrl);
+      const mimeType = utils.getMimeType(localRoom.fileUrl);
       newSrc.type = mimeType;
-      videoSource.appendChild(newSrc)
+      videoSource.appendChild(newSrc);
       const subtitleSelect = document.getElementById('subtitle-select');
-      subtitleSelect.innerHTML = "";
-      fetchSubtitleFiles(localRoom.fileUrl)
-        .then((fileSubtitles) => {
-          console.log("Subtitle files", fileSubtitles);
-          if (fileSubtitles) {
-            // Supprime les autres fichiers de sous-titre de la vidéo
-            subtitleSelect.innerHTML += `<option value="None"> </option>`
-            for (let subtitle in fileSubtitles) {
-              subtitle = fileSubtitles[subtitle];
-              subtitleSelect.innerHTML += `<option value="${subtitle}">${subtitle}</option>`
-              console.log("Subtitle", subtitle);
-            }
-            // Add event listener to select subtitle file
-            subtitleSelect.addEventListener('change', async () => {
-              const selectedFile = subtitleSelect.value;
-              updateSubtitleSelect(selectedFile);
-            });
-          } else {
-            subtitleSelect.outerHTML = "";
+      subtitleSelect.innerHTML = '';
+      fetchSubtitleFiles(localRoom.fileUrl).then((fileSubtitles) => {
+        console.log('Subtitle files', fileSubtitles);
+        if (fileSubtitles) {
+          // Supprime les autres fichiers de sous-titre de la vidéo
+          subtitleSelect.innerHTML += '<option value="None"> </option>';
+          for (let subtitle in fileSubtitles) {
+            subtitle = fileSubtitles[subtitle];
+            subtitleSelect.innerHTML += `<option value="${subtitle}">${subtitle}</option>`;
+            console.log('Subtitle', subtitle);
           }
-        })
+          // Add event listener to select subtitle file
+          subtitleSelect.addEventListener('change', async () => {
+            const selectedFile = subtitleSelect.value;
+            updateSubtitleSelect(selectedFile);
+          });
+        } else {
+          subtitleSelect.outerHTML = '';
+        }
+      });
 
-      
-
-      videoSource.load(); 
+      videoSource.load();
       if (!MediaSource.isTypeSupported(mimeCodec)) {
-        document.getElementsByTagName('body')[0].outerHTML = `<iframe width="${window.innerWidth-25}" height="${window.innerHeight-25}" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"></iframe>`
-        
+        document.getElementsByTagName('body')[0].outerHTML = `<iframe width="${
+          window.innerWidth - 25
+        }" height="${
+          window.innerHeight - 25
+        }" src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"></iframe>`;
       }
-      
+
       if (localRoom.host.uuid === localUser.uuid) {
         // HOST
-        console.log("Host")
+        console.log('Host');
 
         // Init WebSocket
-        const hostSocket = new WebSocket(`ws://${window.location.hostname}:2300/`);
-        const clientSocket = new WebSocket(`ws://${window.location.hostname}:2310/`);
-        hostSocket.onopen = function() {
+        const hostSocket = new WebSocket(
+          `ws://${window.location.host}/room/host`
+        );
+        const clientSocket = new WebSocket(
+          `ws://${window.location.host}/room/client`
+        );
+        hostSocket.onopen = function () {
           console.log('Connection HOST WebSocket active');
-        }
-        clientSocket.onopen = function() {
+        };
+        clientSocket.onopen = function () {
           console.log('Connection CLIENT (fetch users) WebSocket active');
           // Fetch room
           setInterval(() => {
             webFetchRoom(clientSocket);
-          }, 100)
-          if (!localRoom.users.find(user => user.uuid === localUser.uuid)) {
+          }, 100);
+          if (!localRoom.users.find((user) => user.uuid === localUser.uuid)) {
             joinRoom();
           }
           showUsers(localRoom);
-        }
-        clientSocket.onmessage = function(event) {
-          let decodedMessage = utils.webJsonDecode(event);
+        };
+        clientSocket.onmessage = function (event) {
+          const decodedMessage = utils.webJsonDecode(event);
           if (decodedMessage.error) {
             console.error('WEBSOCKET Error:', decodedMessage.error);
-            if (decodedMessage.error == "Room not found") {
+            if (decodedMessage.error == 'Room not found') {
               goHome();
             }
           } else if (decodedMessage.room) {
             // If host have left the room
             if (decodedMessage.room.users.length != localRoom.users.length) {
-              localRoom = decodedMessage.room
+              localRoom = decodedMessage.room;
               showUsers(localRoom);
             }
-            
           }
-        }
-        clientSocket.onerror = function(error) {
+        };
+        clientSocket.onerror = function () {
           goHome();
-        }
-        
+        };
 
         // Init UI
-        userLatence.outerHTML = ""
-        userLatenceLabel.outerHTML = ""
+        userLatence.outerHTML = '';
+        userLatenceLabel.outerHTML = '';
 
         // On pause
         videoSource.addEventListener('pause', () => {
-          console.log("pause", videoSource.currentTime)
-          STOP = true
-          hostPaused = true
+          console.log('pause', videoSource.currentTime);
+          STOP = true;
+          hostPaused = true;
           webUpdateRoom(hostSocket);
-        })
-        
+        });
+
         // On play
         videoSource.addEventListener('play', () => {
-          STOP = false
-          hostPaused = false
-          console.log("play")
-          setInterval(() => { if (!STOP && !hostPaused) webUpdateRoom(hostSocket) }, 10)
-        })
+          STOP = false;
+          hostPaused = false;
+          console.log('play');
+          setInterval(() => {
+            if (!STOP && !hostPaused) webUpdateRoom(hostSocket);
+          }, 10);
+        });
       } else {
         // CLIENT
-        console.log("Not host")
-        const clientSocket = new WebSocket(`ws://${window.location.hostname}:2310/`);
-        clientSocket.onopen = function() {
+        console.log('Not host');
+        const clientSocket = new WebSocket(
+          `ws://${window.location.host}/room/client`
+        );
+        clientSocket.onopen = function () {
           console.log('Connection CLIENT WebSocket active');
           // Check if host is paused
           setInterval(() => {
             webFetchRoom(clientSocket);
-          }, 10)
-        }
-        clientSocket.onmessage = function(event) {
-          let decodedMessage = utils.webJsonDecode(event);
+          }, 10);
+        };
+        clientSocket.onmessage = function (event) {
+          const decodedMessage = utils.webJsonDecode(event);
           if (decodedMessage.error) {
             console.error('WEBSOCKET Error:', decodedMessage.error);
-            if (decodedMessage.error == "Room not found") {
+            if (decodedMessage.error == 'Room not found') {
               nextRoom();
             }
           } else {
-            let room = decodedMessage.room;
+            const room = decodedMessage.room;
             showUsers(room);
             if (room.pause !== hostPaused) {
-              hostPaused = room.pause
+              hostPaused = room.pause;
               if (hostPaused) {
                 videoSource.pause();
               } else {
-                MANUAL_PLAY = false
-                funcPlay = true
+                MANUAL_PLAY = false;
+                funcPlay = true;
                 videoSource.play();
               }
-              console.log("hostPaused", hostPaused)
+              console.log('hostPaused', hostPaused);
             }
           }
-          
-        }
-        clientSocket.onerror = function(error) {
+        };
+        clientSocket.onerror = function (error) {
           console.error('WebSocket Error:', error);
           nextRoom();
+        };
+
+        clientSocket.onerror = function (error) {
+          console.error('WebSocket Error:', error);
         }
 
         joinRoom();
-  
+
         // Set manual latence
         userLatence.addEventListener('input', () => {
-          latence = userLatence.value / 1000
-          userLatenceLabel.innerHTML = `Latence: ${latence*1000}ms`
-        })
-        userLatence.value = latence * 1000
-        userLatenceLabel.innerHTML = `Latence: ${latence*1000}ms`
-  
+          latence = userLatence.value / 1000;
+          userLatenceLabel.innerHTML = `Latence: ${latence * 1000}ms`;
+        });
+        userLatence.value = latence * 1000;
+        userLatenceLabel.innerHTML = `Latence: ${latence * 1000}ms`;
+
         let MANUAL_PLAY = false;
-        let funcPlay= true;
-        
+        let funcPlay = true;
+
         // Check timecode 1st
         Promise.resolve(fetchRoomTimecode()).then((timecode) => {
-          console.log("timecode", timecode)
-          videoSource.currentTime = timecode
-        })
-  
+          console.log('timecode', timecode);
+          videoSource.currentTime = timecode;
+        });
+
         // Check play event
         videoSource.addEventListener('play', () => {
-          let startTime = new Date().getTime();
+          const startTime = new Date().getTime();
           if (!MANUAL_PLAY || funcPlay) {
-            MANUAL_PLAY = true
+            MANUAL_PLAY = true;
 
             // Check timecode
             nextRoomTimecode().then((timecode) => {
               if (!hostPaused) {
                 if (timecode !== undefined) {
-                  console.log("timecode", timecode)
-                  let action_latence = (new Date().getTime() - startTime) / 1000;
-                  console.log("diff", latence)
-                  action_latence = action_latence + latence
-                  console.log("action_latence", action_latence)
+                  console.log('timecode', timecode);
+                  let action_latence =
+                    (new Date().getTime() - startTime) / 1000;
+                  console.log('diff', latence);
+                  action_latence = action_latence + latence;
+                  console.log('action_latence', action_latence);
                   videoSource.currentTime = timecode + action_latence;
                 } else {
-                  console.log("timecode undefined !")
+                  console.log('timecode undefined !');
                 }
               } else {
-                console.log("host paused !")
+                console.log('host paused !');
               }
-            })
+            });
           } else {
-              MANUAL_PLAY = false
-            
+            MANUAL_PLAY = false;
           }
-        })
+        });
       }
-    })
+    });
   }
 
   // On exit page
-  window.addEventListener('beforeunload', function(event) {
-    fetch(`/room/exit`, {
+  window.addEventListener('beforeunload', function (event) {
+    fetch('/room/exit', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ roomId: roomId, user: localUser })
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ roomId, user: localUser })
     }).then((response) => {
       if (!response.ok) {
-        throw new Error('Failed to exit room ' + response.status)
+        throw new Error('Failed to exit room ' + response.status);
       }
-    })
+    });
   });
-})
+});

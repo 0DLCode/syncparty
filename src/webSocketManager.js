@@ -1,16 +1,20 @@
-const WebSocket = require('ws');
-let {globalRooms, globalUsers, globalFiles} = require('./globals.js');
+const { globalRooms, globalUsers, globalFiles } = require('./globals.js');
 let tempLog = 100;
 
-function initWebSocket(port) {
-  const wss = new WebSocket.Server({ port });
+async function clientRoomWebSocket (ws, event) {
+  const msgBody = webJsonDecode(event);
+  if (msgBody.action === 'getRoom') {
+    let roomId = msgBody.roomId;
+    if (globalRooms.hasOwnProperty(roomId)) {
+      ws.send(JSON.stringify({room: globalRooms[roomId]}));
+    } else {
+      ws.send(JSON.stringify({error: "Room not found"}));
+    }
+  }
+}
 
-  wss.on('connection', function connection(ws, req) {
-    console.log(`ROOM PAGE\\\\ Client connected: [${req.socket.remoteAddress}:${req.socket.remotePort}] on ${port}`);
-    
-    // On message received
-    ws.on('message', async function incoming(event) {
-      let msgBody = webJsonDecode(event);
+async function hostRoomWebSocket (ws, event) {
+   let msgBody = webJsonDecode(event);
       if (msgBody.noLog === undefined) {
         console.log('Decoded message:', msgBody);
       }
@@ -73,62 +77,26 @@ function initWebSocket(port) {
           console.log("User not found");
         }
       }
-    });
-  });
-
 }
 
-function initRoomWebSocket(port) {
-  const wss = new WebSocket.Server({ port });
-  wss.on('connection', function connection(ws, req) {
-      console.log(`ROOM PAGE - HOST\\\\ Client connected: [${req.socket.remoteAddress}:${req.socket.remotePort}] on ${port}`);
-      
-      // On message received
-      ws.on('message', function incoming(event) {
-        let msgBody = webJsonDecode(event);
-        if (msgBody.action === 'getRoom') {
-          let roomId = msgBody.roomId;
-          if (globalRooms.hasOwnProperty(roomId)) {
-            ws.send(JSON.stringify({room: globalRooms[roomId]}));
-          } else {
-            ws.send(JSON.stringify({error: "Room not found"}));
-          }
-        }
-      });
-    })
-      
+async function homeWebSocket (ws, event) {
+  const msgBody = webJsonDecode(event);
+
+  if (msgBody.action === 'getRooms') {
+    ws.send(JSON.stringify({ rooms: globalRooms }));
+    // console.log("Get rooms", globalRooms);
+  } else if (msgBody.action === 'getFiles') {
+    ws.send(JSON.stringify({ files: globalFiles }));
+    // console.log("Get files", globalFiles);
+  } else {
+    ws.send(JSON.stringify({ error: 'Unknown action' }));
+    console.log('Unknown action');
+  }
 }
 
-function initIndexWebSocket(port) {
-  const wss = new WebSocket.Server({ port });
-  wss.on('connection', function connection(ws, req) {
-    console.log(`INDEX PAGE\\\\ Client connected: [${req.socket.remoteAddress}:${req.socket.remotePort}] on ${port}`);
-
-    ws.on('message', function incoming(event) {
-      let msgBody = webJsonDecode(event);
-      if (msgBody.action === "getRooms") {
-        ws.send(JSON.stringify({rooms: globalRooms}));
-        //console.log("Get rooms", globalRooms);
-      } else if (msgBody.action === "getFiles") {
-        ws.send(JSON.stringify({files: globalFiles}));
-        //console.log("Get files", globalFiles);
-      } else {
-        ws.send(JSON.stringify({error: "Unknown action"}));
-        console.log("Unknown action");
-      }
-    });
-
-    ws.on("error", function(error) {
-      console.error('WebSocket Error:', error);
-    });
-  });
-
-
+function webJsonDecode (event) {
+  const msgBody = JSON.parse(event.toString('utf-8'));
+  return msgBody;
 }
 
-function webJsonDecode(event) {
-    let msgBody = JSON.parse(event.toString("utf-8"));
-    return msgBody;
-}
-
-module.exports = {initIndexWebSocket, initWebSocket, initRoomWebSocket, webJsonDecode}
+module.exports = { homeWebSocket, clientRoomWebSocket, hostRoomWebSocket, webJsonDecode };

@@ -7,12 +7,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const { v4: uuidv4 } = require('uuid');
 let { globalRooms, globalUsers, globalFiles, globalWarns, warnLimit } = require('./src/globals.js');
-const { initIndexWebSocket, initWebSocket, initRoomWebSocket } = require('./src/webSocketManager.js');
 const { writeLog, black_list, warnClient, checkWarn, getIpAddress } = require('./src/security.js');
 
 require('dotenv').config();
 const app = express();
-const port = process.env.PORT || 2305;
 
 // Multer upload configuration
 const storage = multer.diskStorage({
@@ -38,10 +36,6 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter
 });
-
-initIndexWebSocket(2290);
-initWebSocket(2300);
-initRoomWebSocket(2310);
 
 // Check if all required params are present
 function checkParams(requiredParams) {
@@ -155,18 +149,21 @@ app.post('/update/room', checkParams(['user', 'roomId', 'timecode', 'timestamp',
   let timestamp = formData.timestamp;
 
   let latence = (new Date().getTime() - timestamp) / 1000;
-
+  console.log("DEBUG OK")
   if (globalUsers.hasOwnProperty(user.uuid)) {
+    console.log("DEBUG OK 2")
     if (globalUsers[user.uuid].roomHosted === roomId) {
+      console.log("CHANGE")
       if (pause) {
         console.log("paused at", timecode);
         globalRooms[roomId]['pause'] = true;
         globalRooms[roomId].timecode = timecode; 
       } else {
         globalRooms[roomId].timecode = timecode + latence;
-        globalRooms[roomId].pause = false;
+        globalRooms[roomId]['pause'] = false;
         console.log(`timecode updated: ${timecode} + ${latence*1000}ms`); // DEBUG ===================
       }
+      console.log("NEW STATUS", globalRooms[roomId])
       res.status(201).send('ok');
     } else {
       res.status(401).json({error: 'Wrong host'});
@@ -285,13 +282,6 @@ app.use((err, req, res, next) => {
   res.status(500).send(`Error occurred!`);
 });
 
-
-// Startup
-app.listen(port, () => {
-  console.log(`App running at http://localhost:${port}`);
-  setInterval(updateGlobalFiles, 1000);
-});
-
 function updateGlobalFiles() {
   fs.readdir('./files', (err, files) => {
     if (err) {
@@ -301,3 +291,8 @@ function updateGlobalFiles() {
     globalFiles.splice(0, globalFiles.length, ...files);
   });
 }
+
+setInterval(updateGlobalFiles, 1000);
+console.log("Start check")
+
+module.exports = app;

@@ -1,16 +1,16 @@
-function setCookie(name, value, days) {
-  let expires = "";
+function setCookie (name, value, days) {
+  let expires = '';
   if (days) {
-    let date = new Date();
+    const date = new Date();
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-    expires = "; expires=" + date.toUTCString();
+    expires = '; expires=' + date.toUTCString();
   }
-  document.cookie = name + "=" + (value || "") + expires + "; path=/";
+  document.cookie = name + '=' + (value || '') + expires + '; path=/';
 }
-  
-function getCookie(name) {
-  let nameEQ = name + "=";
-  let ca = document.cookie.split(';');
+
+function getCookie (name) {
+  const nameEQ = name + '=';
+  const ca = document.cookie.split(';');
   for (let i = 0; i < ca.length; i++) {
     let c = ca[i];
     while (c.charAt(0) === ' ') c = c.substring(1, c.length);
@@ -19,88 +19,88 @@ function getCookie(name) {
   return null;
 }
 
-function eraseCookie(name) {
+function eraseCookie (name) {
   document.cookie = name + '=; Max-Age=-99999999;';
 }
 
 // Create a new user
-async function createUser(username) {
+async function createUser (username) {
   return fetch('/create/user', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({ username: username })
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username })
   }).then((response) => {
     if (response.ok) {
-      let user = response.json();
-      console.log('User created successfully!')
-      return user
+      const user = response.json();
+      console.log('User created successfully!');
+      return user;
     } else {
-      throw new Error('Failed to create user')
+      throw new Error('Failed to create user');
     }
   }).catch((err) => {
-    console.error(err)
-  })
+    console.error(err);
+  });
 }
 
-async function getUser(uuid) {
-  return fetch(`/get/user`, {
+async function getUser (uuid) {
+  return fetch('/get/user', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ userId: uuid })
   })
-  .then(response => response.json())
-  .then(data => {
-    return data
-  })
-  .catch(error => {
-    console.error('Error fetching data:', error);
-  });
+    .then(response => response.json())
+    .then(data => {
+      return data;
+    })
+    .catch(error => {
+      console.error('Error fetching data:', error);
+    });
 }
 
 // Get the list of rooms
-async function getRooms() {
-  return fetch(`/get/rooms`)
-  .then(response => response.json())
-  .then(data => {
-    return data
-  })
-  .catch(error => {
-    console.error('Error fetching data:', error);
-  });
+async function getRooms () {
+  return fetch('/get/rooms')
+    .then(response => response.json())
+    .then(data => {
+      return data;
+    })
+    .catch(error => {
+      console.error('Error fetching data:', error);
+    });
 }
 
 // Get the list of files
-async function getFiles() {
-return fetch(`/get/files`)
-.then(response => response.json())
-.then(data => {
-  return data
-})
-.catch(error => {
-  console.error('Error fetching data:', error);
-});
+async function getFiles () {
+  return fetch('/get/files')
+    .then(response => response.json())
+    .then(data => {
+      return data;
+    })
+    .catch(error => {
+      console.error('Error fetching data:', error);
+    });
 }
 
-function checkUserCookie() {
+function checkUserCookie () {
   let tempUser = getCookie('user');
   if (tempUser) {
     tempUser = JSON.parse(tempUser);
-    let user = Promise.resolve(getUser(tempUser.uuid));
+    const user = Promise.resolve(getUser(tempUser.uuid));
     if (user) {
-      console.log("(cookie auth) Check user", user);
+      console.log('(cookie auth) Check user', user);
       return user;
     } else {
-      console.log("(cookie auth) User not found", tempUser);
+      console.log('(cookie auth) User not found', tempUser);
       eraseCookie('user');
     }
   }
-  return null
+  return null;
 }
 
-function webJsonDecode(event) {
+function webJsonDecode (event) {
   let msgBody;
   try {
-    msgBody = JSON.parse(event.data.toString("utf-8"));
+    msgBody = JSON.parse(event.data.toString('utf-8'));
   } catch (e) {
     console.error('Error decoding message:', e);
     return null;
@@ -109,7 +109,7 @@ function webJsonDecode(event) {
   return msgBody;
 }
 
-function getMimeType(fileName) {
+function getMimeType (fileName) {
   const fileExtension = fileName.split('.').pop();
   const videoTypesByExtension = {
     mp4: 'video/mp4',
@@ -117,19 +117,19 @@ function getMimeType(fileName) {
     mpeg: 'video/mpeg',
     mkv: 'video/mkv',
     mov: 'video/quicktime',
-    avi: 'video/x-msvideo',
+    avi: 'video/x-msvideo'
   };
 
   const videoType = videoTypesByExtension[fileExtension];
   return videoType || 'video/mp4';
 }
 
-function getIpAddress(req) {
+function getIpAddress (req) {
   const forwardedIpsStr = req.header('x-forwarded-for');
   const forwardedIps = forwardedIpsStr ? forwardedIpsStr.split(',') : [];
   const ipAddress = forwardedIps[0] || req.connection.remoteAddress;
-  
+
   return ipAddress;
 }
 
-export { createUser, getRooms, getFiles, setCookie, checkUserCookie, webJsonDecode, getMimeType }
+export { createUser, getRooms, getFiles, setCookie, checkUserCookie, webJsonDecode, getMimeType };

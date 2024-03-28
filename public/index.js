@@ -50,7 +50,6 @@ function uploadFile() {
 }
 
 
-
 function showUserInfo() {
   userInfo.innerHTML = `<p id="username">${localUser.username}</p>` +
   `<p id="uuid">${localUser.uuid}</p>`
@@ -124,7 +123,6 @@ function reload() {
     });
 }
 
-
 // LISTENERS
 roomButton.addEventListener('click', function(event) {
   event.preventDefault();
@@ -162,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // WebSocket
-  const socket = new WebSocket(`ws://${window.location.hostname}:2290/`);
+  const socket = new WebSocket(`ws://${window.location.host}/home`);
 
   socket.onopen = function() {
     console.log('Connection WebSocket active');
