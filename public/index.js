@@ -1,4 +1,5 @@
-import { createUser, getRooms, getFiles, setCookie, checkUserCookie, webJsonDecode} from '/utils.js';
+import { createUser, getRooms, getFiles, setCookie, checkUserCookie, webJsonDecode, getWsString} from '/utils.js';
+const wsString = getWsString();
 
 let globalRooms = {};
 let globalFiles = [];
@@ -160,7 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   // WebSocket
-  const socket = new WebSocket(`ws://${window.location.host}/home`);
+  const socket = new WebSocket(`${wsString}${window.location.host}/home`);
 
   socket.onopen = function() {
     console.log('Connection WebSocket active');

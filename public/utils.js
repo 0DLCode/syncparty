@@ -132,4 +132,8 @@ function getIpAddress (req) {
   return ipAddress;
 }
 
-export { createUser, getRooms, getFiles, setCookie, checkUserCookie, webJsonDecode, getMimeType };
+function getWsString() {
+  return window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+}
+
+export { createUser, getRooms, getFiles, setCookie, checkUserCookie, webJsonDecode, getMimeType, getIpAddress, getWsString };

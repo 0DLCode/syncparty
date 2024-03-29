@@ -193,8 +193,9 @@ app.post('/room/join', checkParams(['user', 'roomId']), (req, res) => {
     console.log("User already in room");
     return res.status(409).json({error: `User already in room`});
   }
-
+  console.log("Old usernames", globalRooms[roomId].users.map(user => user.username));
   globalRooms[roomId].users.push(user);
+  console.log("New usernames", globalRooms[roomId].users.map(user => user.username));
   return res.status(201).send('ok');
 });
 
